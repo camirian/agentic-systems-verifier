@@ -325,8 +325,11 @@ def render_mission_control():
             """)
         
         # 1. API Key (Hidden in Expander)
+        # 1. API Key (Hidden in Expander)
         with st.expander("🔐 API Credentials", expanded=False):
-            api_key = st.text_input("Google API Key", type="password", help="Required for AI Extraction")
+            # Check for secret key (Demo Mode)
+            default_key = st.secrets.get("GOOGLE_API_KEY", "")
+            api_key = st.text_input("Google API Key", value=default_key, type="password", help="Required for AI Extraction. Leave empty to use system default if configured.")
         
         # 2. Mission Setup (Grouped)
         # Auto-collapse if we are past the setup phase
