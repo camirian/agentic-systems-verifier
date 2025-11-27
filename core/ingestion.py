@@ -38,6 +38,48 @@ def process_batch(batch_index, batch_text, model):
         print(f"Error processing batch {batch_index + 1}: {e}")
         return []
 
+def extract_doc_title(first_pages_text, model):
+    """
+    Extracts the official document title from the first few pages.
+    """
+    try:
+        prompt = f"""
+        Read the following text (from the first few pages of a document).
+        Identify the OFFICIAL TITLE of the document.
+        
+        Return ONLY the title as a string. Do not add quotes or markdown.
+        If you cannot find a clear title, return "Untitled Specification".
+        
+        TEXT:
+        {first_pages_text[:5000]}
+        """
+        response = model.generate_content(prompt)
+        return response.text.strip()
+    except Exception as e:
+        print(f"Error extracting title: {e}")
+        return "Untitled Specification"
+
+def extract_doc_title(first_pages_text, model):
+    """
+    Extracts the official document title from the first few pages.
+    """
+    try:
+        prompt = f"""
+        Read the following text (from the first few pages of a document).
+        Identify the OFFICIAL TITLE of the document.
+        
+        Return ONLY the title as a string. Do not add quotes or markdown.
+        If you cannot find a clear title, return "Untitled Specification".
+        
+        TEXT:
+        {first_pages_text[:5000]}
+        """
+        response = model.generate_content(prompt)
+        return response.text.strip()
+    except Exception as e:
+        print(f"Error extracting title: {e}")
+        return "Untitled Specification"
+
 def extract_requirements_from_pdf(file_path, api_key, target_section=None, progress_callback=None):
     """
     Extracts requirements from a PDF file using Gemini AI with Smart Page Filtering.
@@ -60,6 +102,17 @@ def extract_requirements_from_pdf(file_path, api_key, target_section=None, progr
         
         reader = pypdf.PdfReader(file_path)
         total_pages = len(reader.pages)
+        
+        # PHASE 0: Extract Title (Auto-Titling)
+        if progress_callback:
+            progress_callback(0.05, "Extracting Document Title...")
+            
+        first_pages_text = ""
+        for i in range(min(5, total_pages)):
+            first_pages_text += reader.pages[i].extract_text() + "\n"
+            
+        doc_title = extract_doc_title(first_pages_text, model)
+        log_event(f"Identified Document Title: {doc_title}")
         
         # PHASE 1: Local Scan & Filtering
         pages_to_process = [] # List of (page_index, page_text)
@@ -176,10 +229,10 @@ def extract_requirements_from_pdf(file_path, api_key, target_section=None, progr
                     progress_callback(current_progress, f"Processed Batch {completed_batches}/{total_batches}...")
 
         if progress_callback:
-            progress_callback(1.0, "Ingestion Complete.")
+            progress_callback(1.0, f"Ingestion Complete. Title: {doc_title}")
 
     except Exception as e:
         log_event(f"Error initializing AI extraction: {e}", level="ERROR")
-        return []
+        return [], "Error"
 
-    return requirements
+    return requirements, doc_title
