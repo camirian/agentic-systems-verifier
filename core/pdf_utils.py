@@ -23,6 +23,13 @@ class MarkdownPDF(FPDF):
         self.multi_cell(0, 5, body)
         self.ln()
 
+def clean_text(text):
+    """
+    Sanitize text for FPDF (Latin-1).
+    Replaces unsupported characters (like emojis) with '?' or removes them.
+    """
+    return text.encode('latin-1', 'replace').decode('latin-1')
+
 def convert_md_to_pdf(markdown_content):
     """
     Converts Markdown content to a PDF file in memory using FPDF2.
@@ -39,6 +46,9 @@ def convert_md_to_pdf(markdown_content):
         
         for line in lines:
             stripped = line.strip()
+            # Sanitize line
+            clean_line = clean_text(stripped)
+            
             if stripped.startswith('#'):
                 # Flush existing body
                 if body_buffer:
@@ -46,10 +56,10 @@ def convert_md_to_pdf(markdown_content):
                     body_buffer = ""
                 
                 # Add Header
-                clean_header = stripped.lstrip('#').strip()
+                clean_header = clean_line.lstrip('#').strip()
                 pdf.chapter_title(clean_header)
             else:
-                body_buffer += line + "\n"
+                body_buffer += clean_line + "\n"
         
         # Flush remaining body
         if body_buffer:
