@@ -141,7 +141,7 @@ def extract_requirements_from_pdf(file_path, api_key, target_section=None, progr
                 log_event("No 'shall' statements found in the entire document.", level="WARN")
                 if progress_callback:
                     progress_callback(1.0, "No 'shall' statements found in document.")
-                return []
+                return [], doc_title
         else:
             # Smart Scan: Find pages with target_section
             matching_indices = set()
@@ -154,7 +154,7 @@ def extract_requirements_from_pdf(file_path, api_key, target_section=None, progr
                 log_event(f"No pages found containing section {target_section}", level="WARN")
                 if progress_callback:
                     progress_callback(1.0, f"No pages found for Section {target_section}.")
-                return []
+                return [], doc_title
                 
             # Add buffer (1 page before and after)
             final_indices = set()
@@ -199,7 +199,7 @@ def extract_requirements_from_pdf(file_path, api_key, target_section=None, progr
         if total_batches == 0:
              if progress_callback:
                 progress_callback(1.0, "No valid text content found in selected pages.")
-             return []
+             return [], doc_title
 
         # Parallel Execution
         with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
