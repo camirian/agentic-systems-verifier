@@ -70,6 +70,22 @@ The app will open at `http://localhost:8501`.
 
 ---
 
+## ☁️ Deployment
+
+### Option 1: Streamlit Community Cloud (Recommended for Demos)
+1.  Push this repository to GitHub.
+2.  Go to [share.streamlit.io](https://share.streamlit.io).
+3.  Select your repo and deploy `app.py`.
+4.  **Secrets:** Add your `GOOGLE_API_KEY` in the Streamlit "Secrets" settings.
+
+### Option 2: Google Cloud Run (Enterprise/Grant)
+This project includes a production-ready `Dockerfile`.
+1.  Install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install).
+2.  Run: `gcloud run deploy agentic-verifier --source .`
+3.  The app will scale automatically and run in a secure container.
+
+---
+
 ## 💠 The V-Model Workflow
 
 ASV guides you through a formal 3-phase Systems Engineering process:
