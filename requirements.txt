@@ -1,7 +1,5 @@
-streamlit>=1.30.0
+streamlit
 pandas
 google-generativeai
 pypdf
 plotly
-xhtml2pdf
-reportlab
