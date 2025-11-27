@@ -6,7 +6,7 @@ secrets.toml
 __pycache__/
 *.pyc
 venv/
-.streamlit/
+.streamlit/secrets.toml
 
 # Data (Don't upload copyrighted NASA specs or your local DB)
 data/*.pdf
