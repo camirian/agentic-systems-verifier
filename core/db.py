@@ -56,10 +56,51 @@ def init_db():
         )
     ''')
     
+    # Added projects table for metadata
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS projects (
+            filename TEXT PRIMARY KEY,
+            title TEXT,
+            req_count INTEGER,
+            last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
     conn.commit()
     conn.close()
 
-def save_requirements(requirements: List[Dict], source_file: str, section: str):
+def upsert_project_metadata(filename: str, title: str, req_count: int):
+    """Update project metadata."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        INSERT OR REPLACE INTO projects (filename, title, req_count, last_updated)
+        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+    ''', (filename, title, req_count))
+    
+    conn.commit()
+    conn.close()
+
+def get_all_projects() -> List[Dict]:
+    """Retrieve all projects with metadata."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    # Ensure table exists (migration for existing DBs)
+    try:
+        cursor.execute('SELECT * FROM projects')
+    except sqlite3.OperationalError:
+        return []
+
+    cursor.execute('SELECT * FROM projects ORDER BY last_updated DESC')
+    rows = cursor.fetchall()
+    conn.close()
+    
+    return [dict(row) for row in rows]
+
+def save_requirements(requirements: List[Dict], source_file: str, section: str, doc_title: str = None):
     """
     Save a list of requirements to the database.
     """
@@ -87,6 +128,17 @@ def save_requirements(requirements: List[Dict], source_file: str, section: str):
         
     conn.commit()
     conn.close()
+    
+    # Update Project Metadata
+    if doc_title:
+        # Get total count for this file
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM requirements WHERE source_file = ?', (source_file,))
+        count = cursor.fetchone()[0]
+        conn.close()
+        
+        upsert_project_metadata(source_file, doc_title, count)
 
 def get_available_specs() -> List[str]:
     """Retrieve a list of unique specification files (projects)."""
