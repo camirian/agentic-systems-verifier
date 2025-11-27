@@ -1,9 +1,6 @@
-streamlit
+streamlit>=1.30.0
 pandas
 google-generativeai
 pypdf
 plotly
 markdown
-xhtml2pdf
-
-
