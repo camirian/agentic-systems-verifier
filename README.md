@@ -1,8 +1,11 @@
 # Agentic Systems Verifier (ASV)
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://agentic-systems-verifier-2rhbgofjzidytbh7fxmqpw.streamlit.app/)
 [![Status](https://img.shields.io/badge/Status-Beta-blue)]()
 [![License](https://img.shields.io/badge/License-MIT-green)]()
 [![AI-Engine](https://img.shields.io/badge/AI-Gemini%20Pro-purple)]()
+
+## 🚀 [Try the Live Demo](https://agentic-systems-verifier-2rhbgofjzidytbh7fxmqpw.streamlit.app/)
 
 **The Autonomous Verification Engine for Safety-Critical Systems.**
 
