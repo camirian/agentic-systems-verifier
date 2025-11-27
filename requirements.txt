@@ -1,6 +1,6 @@
 streamlit>=1.30.0
 pandas
-xhtml2pdf
+fpdf2
 google-generativeai
 pypdf
 plotly
