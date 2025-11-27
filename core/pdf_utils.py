@@ -1,37 +1,62 @@
-import markdown
+from fpdf import FPDF
 import io
-from xhtml2pdf import pisa
+
+class MarkdownPDF(FPDF):
+    def header(self):
+        self.set_font('Helvetica', 'B', 15)
+        self.cell(0, 10, 'Project Documentation', new_x="LMARGIN", new_y="NEXT", align='C')
+        self.ln(5)
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font('Helvetica', 'I', 8)
+        self.cell(0, 10, f'Page {self.page_no()}', align='C')
+
+    def chapter_title(self, label):
+        self.set_font('Helvetica', 'B', 12)
+        self.set_fill_color(200, 220, 255)
+        self.cell(0, 6, label, new_x="LMARGIN", new_y="NEXT", align='L', fill=True)
+        self.ln(4)
+
+    def chapter_body(self, body):
+        self.set_font('Helvetica', '', 11)
+        self.multi_cell(0, 5, body)
+        self.ln()
 
 def convert_md_to_pdf(markdown_content):
     """
-    Converts Markdown content to a PDF file in memory.
+    Converts Markdown content to a PDF file in memory using FPDF2.
+    This is a simplified converter that handles basic text and headers.
     """
-    # 1. Convert Markdown to HTML
-    html_body = markdown.markdown(markdown_content, extensions=['extra', 'codehilite'])
-    
-    # 2. Add Basic Styling
-    html_content = f"""
-    <html>
-    <head>
-        <style>
-            body {{ font-family: Helvetica, sans-serif; font-size: 12pt; }}
-            h1 {{ color: #2E3440; border-bottom: 2px solid #88C0D0; padding-bottom: 10px; }}
-            h2 {{ color: #3B4252; margin-top: 20px; }}
-            code {{ background-color: #ECEFF4; padding: 2px; font-family: Courier; }}
-            pre {{ background-color: #ECEFF4; padding: 10px; border-radius: 5px; }}
-        </style>
-    </head>
-    <body>
-        {html_body}
-    </body>
-    </html>
-    """
-    
-    # 3. Generate PDF
-    pdf_buffer = io.BytesIO()
-    pisa_status = pisa.CreatePDF(io.StringIO(html_content), dest=pdf_buffer)
-    
-    if pisa_status.err:
-        return None
+    try:
+        pdf = MarkdownPDF()
+        pdf.add_page()
         
-    return pdf_buffer.getvalue()
+        # Simple parsing: Treat lines starting with # as headers
+        lines = markdown_content.split('\n')
+        
+        body_buffer = ""
+        
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith('#'):
+                # Flush existing body
+                if body_buffer:
+                    pdf.chapter_body(body_buffer)
+                    body_buffer = ""
+                
+                # Add Header
+                clean_header = stripped.lstrip('#').strip()
+                pdf.chapter_title(clean_header)
+            else:
+                body_buffer += line + "\n"
+        
+        # Flush remaining body
+        if body_buffer:
+            pdf.chapter_body(body_buffer)
+            
+        return pdf.output(dest='S')
+        
+    except Exception as e:
+        print(f"PDF Generation Error: {e}")
+        return None
