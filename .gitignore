@@ -7,7 +7,8 @@ __pycache__/
 *.pyc
 venv/
 .streamlit/secrets.toml
-
+*.db
+data/
 # Data (Don't upload copyrighted NASA specs or your local DB)
 data/*.pdf
 core/*.db
