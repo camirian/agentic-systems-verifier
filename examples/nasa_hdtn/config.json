@@ -1,0 +1,42 @@
+{
+    "bpv6": {
+        "version": 6,
+        "encoding": "sdnv_cbhe",
+        "default_lifetime": 3600,
+        "time_offset": 946684800,
+        "primary_block": {
+            "fields": [
+                "dest_node",
+                "dest_service",
+                "source_node",
+                "source_service",
+                "report_to_node",
+                "report_to_service",
+                "custodian_node",
+                "custodian_service",
+                "creation_timestamp",
+                "sequence_number",
+                "lifetime",
+                "dictionary_length"
+            ]
+        }
+    },
+    "bpv7": {
+        "version": 7,
+        "encoding": "cbor",
+        "default_lifetime": 3600,
+        "time_offset": 946684800,
+        "primary_block": {
+            "fields": [
+                "version",
+                "proc_flags",
+                "crc_type",
+                "dest_eid",
+                "source_eid",
+                "report_to_eid",
+                "creation_timestamp_array",
+                "lifetime"
+            ]
+        }
+    }
+}

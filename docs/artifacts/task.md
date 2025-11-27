@@ -1,0 +1,74 @@
+# Task: V-Model Implementation for Buffer Management (Section 3.2)
+
+- [x] Phase 1: Requirements Extraction <!-- id: 0 -->
+    - [x] Extract "Shall" statements from Section 3.2 of TM-20240011318.pdf <!-- id: 1 -->
+    - [x] Create Requirements_Trace.md <!-- id: 2 -->
+    - [x] Obtain User Approval <!-- id: 3 -->
+- [x] Phase 2: Architecture Design <!-- id: 4 -->
+    - [x] Define Python file structure <!-- id: 5 -->
+- [x] Phase 3: Implementation & Verification <!-- id: 6 -->
+    - [x] Implement buffer_manager.py (Developer Agent) <!-- id: 7 -->
+    - [x] Implement test_buffer_manager.py (QA Agent) <!-- id: 8 -->
+    - [x] Verify compliance with "Shall" statements <!-- id: 9 -->
+- [x] Phase 4: Project Reorganization <!-- id: 10 -->
+    - [x] Create directory structure (src, tests, docs, artifacts) <!-- id: 11 -->
+    - [x] Move files to appropriate directories <!-- id: 12 -->
+    - [x] Create run_tests.sh helper <!-- id: 13 -->
+    - [x] Verify new structure and imports <!-- id: 14 -->
+- [x] Phase 5: Platform Migration <!-- id: 15 -->
+    - [x] Create 'agentic-systems-verifier' structure <!-- id: 16 -->
+    - [x] Move HDTN prototype to 'examples/nasa_hdtn' <!-- id: 17 -->
+    - [x] Create portfolio-grade README.md <!-- id: 18 -->
+- [x] Phase 6: Generic Refactoring <!-- id: 19 -->
+    - [x] Design BaseBundle and Config Schema <!-- id: 20 -->
+    - [x] Extract NASA specifics to config <!-- id: 21 -->
+    - [x] Refactor buffer_manager.py and tests <!-- id: 22 -->
+- [x] Phase 7: Refinement & Documentation <!-- id: 23 -->
+    - [x] Structure tests for scalability (tests/nasa_hdtn) <!-- id: 24 -->
+    - [x] Update Requirements_Trace.md with Verification Status <!-- id: 25 -->
+    - [x] Create examples/nasa_hdtn/README.md <!-- id: 26 -->
+    - [x] Enhance main README.md <!-- id: 27 -->
+- [x] Phase 8: UI Implementation (Streamlit) <!-- id: 28 -->
+    - [x] Install dependencies (streamlit, pandas, sqlalchemy) <!-- id: 29 -->
+    - [x] Scaffold app.py (Sidebar, Tabs, Mock Data) <!-- id: 30 -->
+- [x] Phase 8: UI Implementation (Streamlit) <!-- id: 28 -->
+    - [x] Install dependencies (streamlit, pandas, sqlalchemy) <!-- id: 29 -->
+    - [x] Scaffold app.py (Sidebar, Tabs, Mock Data) <!-- id: 30 -->
+- [x] Phase 8: UI Implementation (Streamlit) <!-- id: 28 -->
+    - [x] Install dependencies (streamlit, pandas, sqlalchemy) <!-- id: 29 -->
+    - [x] Scaffold app.py (Sidebar, Tabs, Mock Data) <!-- id: 30 -->
+    - [x] Integrate Engine Logs with UI <!-- id: 31 -->
+    - [x] Configure Environment (requirements.txt, config.toml) <!-- id: 32 -->
+    - [x] Refine app.py with State Management and Mock Data <!-- id: 33 -->
+    - [x] Align app.py with Senior Frontend Architect Prompt <!-- id: 36 -->
+- [x] Phase 9: Documentation <!-- id: 34 -->
+    - [x] Create docs/UI_USER_MANUAL.md <!-- id: 35 -->
+- [x] Phase 10: Real PDF Ingestion <!-- id: 37 -->
+    - [x] Install pypdf <!-- id: 38 -->
+    - [x] Implement core/ingestion.py <!-- id: 39 -->
+    - [x] Connect app.py to ingestion logic <!-- id: 40 -->
+- [x] Phase 11: Backend Professionalization <!-- id: 41 -->
+    - [x] Config Cleanup (Hide Deploy) <!-- id: 42 -->
+    - [x] Implement core/db.py (SQLite) <!-- id: 43 -->
+    - [x] Refactor core/ingestion.py (Smart Regex) <!-- id: 44 -->
+    - [x] Connect app.py to DB <!-- id: 45 -->
+- [x] Phase 12: Ingestion Refactoring <!-- id: 46 -->
+    - [x] Refactor core/ingestion.py (Sentence-Aware) <!-- id: 47 -->
+    - [x] Update app.py column width <!-- id: 48 -->
+    - [x] Clear database <!-- id: 49 -->
+- [x] Phase 13: UI Inspector <!-- id: 50 -->
+    - [x] Enable row selection in app.py <!-- id: 51 -->
+    - [x] Implement Sidebar Inspector <!-- id: 52 -->
+- [x] Phase 14: Ingestion Refinement (Name Extraction) <!-- id: 53 -->
+    - [x] Refactor core/ingestion.py (Split Name/Text) <!-- id: 54 -->
+    - [x] Update core/db.py (Schema Change) <!-- id: 55 -->
+    - [x] Update app.py (Display Name Column) <!-- id: 56 -->
+    - [x] Reset Database <!-- id: 57 -->
+- [x] Phase 15: AI Ingestion (Gemini) <!-- id: 58 -->
+    - [x] Add google-generativeai to requirements.txt <!-- id: 59 -->
+    - [x] Update app.py (API Key Input) <!-- id: 60 -->
+    - [x] Rewrite core/ingestion.py (LLM Extraction) <!-- id: 61 -->
+- [ ] Phase 16: Agent Integration & Reporting <!-- id: 62 -->
+    - [ ] Connect Agent Cortex to Orchestrator Logs <!-- id: 63 -->
+    - [ ] Implement Dynamic Verification Report <!-- id: 64 -->
+    - [ ] Finalize KnowledgeManager Integration <!-- id: 65 -->
