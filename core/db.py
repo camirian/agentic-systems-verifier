@@ -307,6 +307,7 @@ def clear_database():
     
     cursor.execute('DELETE FROM requirements')
     cursor.execute('DELETE FROM system_logs')
+    cursor.execute('DELETE FROM projects')
     
     conn.commit()
     conn.close()
