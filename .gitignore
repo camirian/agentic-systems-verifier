@@ -1,0 +1,14 @@
+# Secrets
+.env
+secrets.toml
+
+# Python junk
+__pycache__/
+*.pyc
+venv/
+.streamlit/
+
+# Data (Don't upload copyrighted NASA specs or your local DB)
+data/*.pdf
+core/*.db
+logs/
