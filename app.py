@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-# from xhtml2pdf import pisa  # Temporarily disabled for deployment debugging
+from xhtml2pdf import pisa
 import base64
 import io
 from core.ingestion import extract_requirements_from_pdf
