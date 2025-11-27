@@ -249,6 +249,26 @@ def render_documentation():
         with open(file_path, "r") as f:
             content = f.read()
             
+        # 3. Visual Flourish (Download Button)
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            pass # Clean UI - No debug path
+        with col2:
+            # Convert to PDF on the fly
+            with st.spinner("Generating PDF..."):
+                pdf_data = convert_md_to_pdf(content)
+            
+            if pdf_data:
+                st.download_button(
+                    label="📥 Download PDF",
+                    data=pdf_data,
+                    file_name=f"{os.path.splitext(os.path.basename(file_path))[0]}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
+            else:
+                st.error("PDF Generation Failed")
+            
         st.markdown(content, unsafe_allow_html=True)
     else:
         st.error(f"File not found: {file_path}")
