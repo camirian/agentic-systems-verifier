@@ -306,11 +306,20 @@ def clear_database():
     cursor = conn.cursor()
     
     cursor.execute('DELETE FROM requirements')
-    cursor.execute('DELETE FROM system_logs')
     cursor.execute('DELETE FROM projects')
     
     conn.commit()
     conn.close()
+    
+    # Also delete physical files in data/ directory
+    if os.path.exists("data"):
+        for filename in os.listdir("data"):
+            file_path = os.path.join("data", filename)
+            try:
+                if os.path.isfile(file_path) and filename.endswith(".pdf"):
+                    os.unlink(file_path)
+            except Exception as e:
+                print(f"Error deleting file {file_path}: {e}")
 
 def log_event(message: str, level: str = "INFO"):
     """Log a system event to the database."""
