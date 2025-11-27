@@ -5,6 +5,8 @@ import plotly.graph_objects as go
 # from xhtml2pdf import pisa
 import base64
 import io
+import datetime
+import time
 from core.ingestion import extract_requirements_from_pdf
 from core.db import init_db, save_requirements, get_requirements, update_requirement, clear_database, log_event, get_system_logs, get_available_specs, update_generated_code
 from core.verification_engine import VerificationEngine
