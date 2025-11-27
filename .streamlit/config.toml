@@ -1,0 +1,13 @@
+[theme]
+base = "dark"
+primaryColor = "#88C0D0" # Frost Cyan
+backgroundColor = "#2E3440" # Polar Night
+secondaryBackgroundColor = "#3B4252" # Secondary Dark
+textColor = "#ECEFF4" # Snow Storm
+font = "sans serif"
+
+[server]
+headless = true
+
+[client]
+toolbarMode = "viewer"
