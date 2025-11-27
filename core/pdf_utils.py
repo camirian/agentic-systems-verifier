@@ -55,7 +55,7 @@ def convert_md_to_pdf(markdown_content):
         if body_buffer:
             pdf.chapter_body(body_buffer)
             
-        return pdf.output(dest='S')
+        return bytes(pdf.output())
         
     except Exception as e:
         print(f"PDF Generation Error: {e}")
