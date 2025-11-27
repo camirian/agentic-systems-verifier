@@ -1,5 +1,0 @@
-build-essential
-libssl-dev
-libffi-dev
-libjpeg-dev
-zlib1g-dev
