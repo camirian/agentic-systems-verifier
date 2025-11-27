@@ -68,6 +68,42 @@ def init_db():
     
     conn.commit()
     conn.close()
+    
+    # Run Migration
+    migrate_projects_metadata()
+
+def migrate_projects_metadata():
+    """Backfill projects table from existing requirements."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    # Find projects that are in requirements but NOT in projects table
+    cursor.execute('''
+        SELECT DISTINCT source_file 
+        FROM requirements 
+        WHERE source_file IS NOT NULL 
+        AND source_file != ""
+        AND source_file NOT IN (SELECT filename FROM projects)
+    ''')
+    
+    missing_projects = [row[0] for row in cursor.fetchall()]
+    
+    for filename in missing_projects:
+        # Get count
+        cursor.execute('SELECT COUNT(*) FROM requirements WHERE source_file = ?', (filename,))
+        count = cursor.fetchone()[0]
+        
+        # Insert with default title
+        cursor.execute('''
+            INSERT INTO projects (filename, title, req_count, last_updated)
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+        ''', (filename, filename, count)) # Use filename as title for legacy data
+        
+    if missing_projects:
+        print(f"Migrated {len(missing_projects)} projects to metadata table.")
+        
+    conn.commit()
+    conn.close()
 
 def upsert_project_metadata(filename: str, title: str, req_count: int):
     """Update project metadata."""
