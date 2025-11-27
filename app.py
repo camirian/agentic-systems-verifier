@@ -9,7 +9,7 @@ import datetime
 import time
 import os
 from core.ingestion import extract_requirements_from_pdf
-from core.db import init_db, save_requirements, get_requirements, update_requirement, clear_database, log_event, get_system_logs, get_available_specs, update_generated_code
+from core.db import init_db, save_requirements, get_requirements, update_requirement, clear_database, log_event, get_system_logs, get_all_projects, update_generated_code
 from core.verification_engine import VerificationEngine
 from core.pdf_utils import convert_md_to_pdf
 
@@ -281,27 +281,6 @@ def render_mission_control():
         
         def on_project_change():
             spec = st.session_state['spec_selector']
-            st.session_state['selected_spec'] = spec
-            # Reload data
-            db_data = get_requirements(source_file=spec)
-            st.session_state['requirements'] = pd.DataFrame(db_data) if db_data else pd.DataFrame(columns=["ID", "Requirement Name", "Requirement", "Status", "Priority", "Source"])
-            st.session_state['selected_req_id'] = None
-            st.toast(f"Switched to project: {spec}", icon="🔄")
-
-        available_specs = get_available_specs()
-        available_specs.insert(0, "All Projects")
-        
-        if 'selected_spec' not in st.session_state:
-            st.session_state['selected_spec'] = "All Projects"
-            
-        # Ensure current selection is valid
-        current_index = 0
-        if st.session_state['selected_spec'] in available_specs:
-            current_index = available_specs.index(st.session_state['selected_spec'])
-            
-        st.selectbox(
-            "📂 Active Specification", 
-            available_specs, 
             index=current_index,
             key='spec_selector',
             on_change=on_project_change
@@ -362,24 +341,36 @@ def render_mission_control():
                     log_event(f"Saved spec to {save_path}")
                     log_event("Ingesting PDF with Smart Regex Engine...")
                     
-                    # Extract Requirements
                     if not api_key:
                         st.error("Please enter a Google API Key.")
-                        extracted_reqs = []
                     else:
-                        with st.spinner("🤖 Agents analyzing document structure..."):
-                            extracted_reqs = extract_requirements_from_pdf(save_path, api_key=api_key, target_section=target_section)
-                            
-                        if extracted_reqs:
-                            # Save to DB with ACTUAL filename
-                            save_requirements(extracted_reqs, source_file=safe_filename, section=target_section)
+                        progress_bar = st.progress(0.0)
+                        status_text = st.empty()
+                        
+                        def update_progress(p, text):
+                            progress_bar.progress(p)
+                            status_text.caption(f"🔄 {text}")
+                        
+                        # Call Ingestion (Now returns tuple)
+                        extracted_data, doc_title = extract_requirements_from_pdf(
+                            save_path, 
+                            api_key, 
+                            target_section=target_section,
+                            progress_callback=update_progress
+                        )
+                        
+                        if extracted_data:
+                            # Save to DB with Title
+                            save_requirements(extracted_data, source_file=safe_filename, section=target_section, doc_title=doc_title)
                             
                             # Update Session State
                             st.session_state['requirements'] = pd.DataFrame(get_requirements(source_file=safe_filename))
                             st.session_state['selected_spec'] = safe_filename # Auto-switch to new project
                             
-                            log_event(f"Found {len(extracted_reqs)} requirements.")
-                            st.toast(f"Ingested {len(extracted_reqs)} Requirements", icon="✅")
+                            log_event(f"Found {len(extracted_data)} requirements.")
+                            st.toast(f"Ingested {len(extracted_data)} Requirements", icon="✅")
+                            st.success(f"✅ Successfully ingested {len(extracted_data)} requirements from '{doc_title}'!")
+                            time.sleep(1)
                             st.rerun()
                         else:
                             log_event("Warning: No requirements found matching criteria.", level="WARN")
