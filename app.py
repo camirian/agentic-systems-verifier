@@ -249,26 +249,6 @@ def render_documentation():
         with open(file_path, "r") as f:
             content = f.read()
             
-        # 3. Visual Flourish (Download Button)
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            pass # Clean UI - No debug path
-        with col2:
-            # Convert to PDF on the fly
-            with st.spinner("Generating PDF..."):
-                pdf_data = convert_md_to_pdf(content)
-            
-            if pdf_data:
-                st.download_button(
-                    label="📥 Download PDF",
-                    data=pdf_data,
-                    file_name=f"{os.path.splitext(os.path.basename(file_path))[0]}.pdf",
-                    mime="application/pdf",
-                    use_container_width=True
-                )
-            else:
-                st.error("PDF Generation Failed")
-            
         st.markdown(content, unsafe_allow_html=True)
     else:
         st.error(f"File not found: {file_path}")
@@ -490,7 +470,8 @@ def render_mission_control():
                     st.rerun()
 
     # Main Layout
-    st.title("🛡️ ASV: Agentic Systems Verifier")
+    # Main Layout
+    st.title("ASV: Agentic Systems Verifier")
 
     # Tabs
     tab1, tab2, tab3 = st.tabs(["📋 Requirements Trace", "🧠 Agent Cortex", "✅ Verification Report"])
@@ -1066,21 +1047,16 @@ def render_mission_control():
             )
     # --- Sidebar Footer ---
     with st.sidebar:
-        # Danger Zone
-        with st.expander("⚠️ Danger Zone", expanded=False):
-            st.caption("Clears all requirements and verification logs.")
-            
-            # Safety Interlock
-            confirm_reset = st.checkbox("I acknowledge this action is irreversible.", key="confirm_reset")
-            
-            if confirm_reset:
-                if st.button("🗑️ Reset Database", type="secondary", use_container_width=True):
-                    clear_database()
-                    st.session_state['requirements'] = pd.DataFrame(columns=["ID", "Requirement Name", "Requirement", "Status", "Priority", "Source"])
-                    st.session_state['system_logs'] = [f"[{datetime.datetime.now().strftime('%H:%M:%S')}] Database reset by user."]
-                    st.toast("Database wiped successfully!", icon="🗑️")
-                    time.sleep(1) # Give time for toast
-                    st.rerun()
+        # --- System Administration ---
+        with st.expander("⚙️ System Administration"):
+            st.warning("These actions are irreversible.")
+            if st.button("⚠️ Reset Database", type="primary", use_container_width=True):
+                clear_database()
+                st.session_state['requirements'] = pd.DataFrame(columns=["ID", "Requirement Name", "Requirement", "Status", "Priority", "Source"])
+                st.session_state['selected_req_id'] = None
+                st.toast("Database cleared successfully.", icon="🗑️")
+                time.sleep(1) # Give time for toast
+                st.rerun()
 
  
         st.markdown("---")
