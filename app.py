@@ -279,12 +279,56 @@ def render_mission_control():
         # --- Global Project Selector ---
         st.markdown("---")
         
+        # --- Project Selection (Global) ---
+        st.sidebar.header("📂 Active Specification")
+        
+        # Fetch projects with metadata
+        projects = get_all_projects() # Returns list of dicts
+        
+        # Create mapping for Rich Dropdown
+        # Map filename -> "📄 Title (Count Reqs)"
+        project_map = {p['filename']: p for p in projects}
+        
+        # Add "All Projects" option
+        all_projects_option = "All Projects"
+        options = [all_projects_option] + list(project_map.keys())
+        
+        def format_project(filename):
+            if filename == all_projects_option:
+                return "🌍 All Projects"
+            p = project_map.get(filename)
+            if p and p['title']:
+                return f"📄 {p['title']} ({p['req_count']} Reqs)"
+            return f"📄 {filename}"
+
+        if 'selected_spec' not in st.session_state:
+            st.session_state['selected_spec'] = all_projects_option
+            
+        # Ensure current selection is valid
+        if st.session_state['selected_spec'] not in options:
+             st.session_state['selected_spec'] = all_projects_option
+
         def on_project_change():
             spec = st.session_state['spec_selector']
-            index=current_index,
+            st.session_state['selected_spec'] = spec
+            # Reload data
+            db_data = get_requirements(source_file=spec)
+            st.session_state['requirements'] = pd.DataFrame(db_data) if db_data else pd.DataFrame(columns=["ID", "Requirement Name", "Requirement", "Status", "Priority", "Source"])
+            st.session_state['selected_req_id'] = None
+            st.toast(f"Switched to project: {spec}", icon="🔄")
+
+        st.sidebar.selectbox(
+            "Select Project",
+            options=options,
+            format_func=format_project,
+            index=options.index(st.session_state['selected_spec']),
             key='spec_selector',
-            on_change=on_project_change
+            on_change=on_project_change,
+            label_visibility="collapsed"
         )
+        st.divider()
+        
+
         st.divider()
 
         # --- Mission Phase Tracker (Logic Only) ---
@@ -1038,53 +1082,7 @@ def render_mission_control():
                     time.sleep(1) # Give time for toast
                     st.rerun()
 
-            # --- Project Selection (Global) ---
-        st.sidebar.header("📂 Active Specification")
-        
-        # Fetch projects with metadata
-        projects = get_all_projects() # Returns list of dicts
-        
-        # Create mapping for Rich Dropdown
-        # Map filename -> "📄 Title (Count Reqs)"
-        project_map = {p['filename']: p for p in projects}
-        
-        # Add "All Projects" option
-        all_projects_option = "All Projects"
-        options = [all_projects_option] + list(project_map.keys())
-        
-        def format_project(filename):
-            if filename == all_projects_option:
-                return "🌍 All Projects"
-            p = project_map.get(filename)
-            if p and p['title']:
-                return f"📄 {p['title']} ({p['req_count']} Reqs)"
-            return f"📄 {filename}"
-
-        if 'selected_spec' not in st.session_state:
-            st.session_state['selected_spec'] = all_projects_option
-            
-        # Ensure current selection is valid
-        if st.session_state['selected_spec'] not in options:
-             st.session_state['selected_spec'] = all_projects_option
-
-        def on_project_change():
-            spec = st.session_state['spec_selector']
-            st.session_state['selected_spec'] = spec
-            # Reload data
-            db_data = get_requirements(source_file=spec)
-            st.session_state['requirements'] = pd.DataFrame(db_data) if db_data else pd.DataFrame(columns=["ID", "Requirement Name", "Requirement", "Status", "Priority", "Source"])
-            st.session_state['selected_req_id'] = None
-            st.toast(f"Switched to project: {spec}", icon="🔄")
-
-        st.sidebar.selectbox(
-            "Select Project",
-            options=options,
-            format_func=format_project,
-            index=options.index(st.session_state['selected_spec']),
-            key='spec_selector',
-            on_change=on_project_change,
-            label_visibility="collapsed"
-        ) 
+ 
         st.markdown("---")
         st.markdown(
             """
