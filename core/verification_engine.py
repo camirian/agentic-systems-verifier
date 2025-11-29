@@ -124,10 +124,16 @@ class VerificationEngine:
         Generates Python pytest code for a given requirement.
         """
         prompt = f"""
-        You are a Python Test Engineer. Write a `pytest` unit test to verify this requirement: '{requirement_text}'.
+        You are a Senior Python Test Engineer for NASA software.
+        Write a robust `pytest` unit test for the following requirement.
         
-        Return ONLY the python code block. Do not include markdown formatting (like ```python).
-        Just return the raw code string.
+        Requirement: "{requirement_text}"
+        
+        Constraints:
+        1. Use `pytest`.
+        2. Mock any external dependencies (telemetry, hardware).
+        3. Include comments explaining the verification logic.
+        4. Return ONLY the python code block (no markdown text).
         """
         
         try:
