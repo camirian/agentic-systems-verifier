@@ -759,90 +759,101 @@ def render_mission_control():
                 # --- BULK ACTIONS ---
                 st.markdown(f"#### 📦 Bulk Actions ({len(selected_rows)} items)")
                 
-                # CRITICAL FIX: selected_rows (from UI) lacks 'Generated Code' column.
-                # We must fetch the full data from session state using the IDs.
-                selected_ids = selected_rows['ID'].tolist()
-                full_selected_rows = st.session_state['requirements'][
-                    st.session_state['requirements']['ID'].isin(selected_ids)
-                ]
-                
-                # DEBUG: Show what we found
-                with st.expander("🐞 Debug Data", expanded=True):
-                    st.write("Selected IDs:", selected_ids)
-                    st.write("Full Rows Found:", len(full_selected_rows))
-                    if not full_selected_rows.empty:
-                        st.dataframe(full_selected_rows[['ID', 'Verification Method', 'Generated Code']])
-                
-                # 1. Bulk Generate (Show for ALL Test items, allowing regeneration)
-                # Robust check: handle NaN, whitespace, case
-                test_candidates = full_selected_rows[
-                    full_selected_rows['Verification Method'].fillna('').astype(str).str.strip().eq('Test')
-                ]
-                
-                actions_available = False
-                
-                if not test_candidates.empty:
-                    actions_available = True
-                    # Count how many are missing code
-                    missing_count = test_candidates['Generated Code'].fillna('').eq('').sum()
-                    btn_label = f"⚡ Generate Code for {len(test_candidates)} Items"
-                    if missing_count < len(test_candidates):
-                        btn_label += f" ({len(test_candidates) - missing_count} will be overwritten)"
+                try:
+                    # CRITICAL FIX: selected_rows (from UI) lacks 'Generated Code' column.
+                    # We must fetch the full data from session state using the IDs.
+                    selected_ids = selected_rows['ID'].tolist()
+                    full_selected_rows = st.session_state['requirements'][
+                        st.session_state['requirements']['ID'].isin(selected_ids)
+                    ]
                     
-                    if st.button(btn_label, type="primary", use_container_width=True):
-                        if not api_key:
-                            st.error("API Key required.")
-                        else:
-                            progress_bar = st.progress(0)
-                            engine = VerificationEngine(api_key)
-                            
-                            for i, (index, row) in enumerate(test_candidates.iterrows()):
-                                with st.spinner(f"Generating for {row['ID']}..."):
-                                    code = engine.generate_test_code(row['Requirement'])
-                                    update_generated_code(row['ID'], code)
-                                    
-                                    # Update Session State
-                                    main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == row['ID']].index[0]
-                                    st.session_state['requirements'].at[main_idx, 'Generated Code'] = code
+                    # Local Failsafe: Ensure columns exist in the slice
+                    if 'Generated Code' not in full_selected_rows.columns:
+                        full_selected_rows['Generated Code'] = ""
+                    if 'Verification Method' not in full_selected_rows.columns:
+                        full_selected_rows['Verification Method'] = ""
+
+                    # DEBUG: Show what we found
+                    with st.expander("🐞 Debug Data", expanded=True):
+                        st.write("Selected IDs:", selected_ids)
+                        st.write("Full Rows Found:", len(full_selected_rows))
+                        if not full_selected_rows.empty:
+                            st.dataframe(full_selected_rows[['ID', 'Verification Method', 'Generated Code']])
+                    
+                    # 1. Bulk Generate (Show for ALL Test items, allowing regeneration)
+                    # Robust check: handle NaN, whitespace, case
+                    test_candidates = full_selected_rows[
+                        full_selected_rows['Verification Method'].fillna('').astype(str).str.strip().eq('Test')
+                    ]
+                    
+                    actions_available = False
+                    
+                    if not test_candidates.empty:
+                        actions_available = True
+                        # Count how many are missing code
+                        missing_count = test_candidates['Generated Code'].fillna('').eq('').sum()
+                        btn_label = f"⚡ Generate Code for {len(test_candidates)} Items"
+                        if missing_count < len(test_candidates):
+                            btn_label += f" ({len(test_candidates) - missing_count} will be overwritten)"
+                        
+                        if st.button(btn_label, type="primary", use_container_width=True):
+                            if not api_key:
+                                st.error("API Key required.")
+                            else:
+                                progress_bar = st.progress(0)
+                                engine = VerificationEngine(api_key)
                                 
-                                progress_bar.progress((i + 1) / len(test_candidates))
-                            
-                            st.success("Bulk Generation Complete!")
-                            time.sleep(1)
-                            st.rerun()
-                
-                # 2. Bulk Execute (Show for items with code)
-                # Robust check for non-empty code
-                ready_to_run = full_selected_rows[full_selected_rows['Generated Code'].fillna('').ne('')]
-                
-                if not ready_to_run.empty:
-                    actions_available = True
-                    st.markdown(f"**Ready to Execute:** {len(ready_to_run)} items")
-                    if st.button(f"▶️ Run Verification for {len(ready_to_run)} Items", type="secondary", use_container_width=True):
-                        if not api_key:
-                            st.error("API Key required.")
-                        else:
-                            progress_bar = st.progress(0)
-                            engine = VerificationEngine(api_key)
-                            
-                            for i, (index, row) in enumerate(ready_to_run.iterrows()):
-                                with st.spinner(f"Executing {row['ID']}..."):
-                                    result = engine.execute_test_code(row['Generated Code'])
-                                    update_execution_result(row['ID'], result['status'], result['log'])
+                                for i, (index, row) in enumerate(test_candidates.iterrows()):
+                                    with st.spinner(f"Generating for {row['ID']}..."):
+                                        code = engine.generate_test_code(row['Requirement'])
+                                        update_generated_code(row['ID'], code)
+                                        
+                                        # Update Session State
+                                        main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == row['ID']].index[0]
+                                        st.session_state['requirements'].at[main_idx, 'Generated Code'] = code
                                     
-                                    # Update Session State
-                                    main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == row['ID']].index[0]
-                                    st.session_state['requirements'].at[main_idx, 'Verification Status'] = result['status']
-                                    st.session_state['requirements'].at[main_idx, 'Execution Log'] = result['log']
+                                    progress_bar.progress((i + 1) / len(test_candidates))
                                 
-                                progress_bar.progress((i + 1) / len(ready_to_run))
-                            
-                            st.success("Bulk Execution Complete!")
-                            time.sleep(1)
-                            st.rerun()
-                            
-                if not actions_available:
-                    st.warning("No actions available for selected items. Ensure they are set to 'Test' method.")
+                                st.success("Bulk Generation Complete!")
+                                time.sleep(1)
+                                st.rerun()
+                    
+                    # 2. Bulk Execute (Show for items with code)
+                    # Robust check for non-empty code
+                    ready_to_run = full_selected_rows[full_selected_rows['Generated Code'].fillna('').ne('')]
+                    
+                    if not ready_to_run.empty:
+                        actions_available = True
+                        st.markdown(f"**Ready to Execute:** {len(ready_to_run)} items")
+                        if st.button(f"▶️ Run Verification for {len(ready_to_run)} Items", type="secondary", use_container_width=True):
+                            if not api_key:
+                                st.error("API Key required.")
+                            else:
+                                progress_bar = st.progress(0)
+                                engine = VerificationEngine(api_key)
+                                
+                                for i, (index, row) in enumerate(ready_to_run.iterrows()):
+                                    with st.spinner(f"Executing {row['ID']}..."):
+                                        result = engine.execute_test_code(row['Generated Code'])
+                                        update_execution_result(row['ID'], result['status'], result['log'])
+                                        
+                                        # Update Session State
+                                        main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == row['ID']].index[0]
+                                        st.session_state['requirements'].at[main_idx, 'Verification Status'] = result['status']
+                                        st.session_state['requirements'].at[main_idx, 'Execution Log'] = result['log']
+                                    
+                                    progress_bar.progress((i + 1) / len(ready_to_run))
+                                
+                                st.success("Bulk Execution Complete!")
+                                time.sleep(1)
+                                st.rerun()
+                                
+                    if not actions_available:
+                        st.warning("No actions available. Ensure items are set to 'Test' method.")
+                        
+                except Exception as e:
+                    st.error(f"Bulk Actions Error: {str(e)}")
+                    st.exception(e)
 
             else:
                 # --- SINGLE ITEM INSPECTOR (Existing Logic) ---
