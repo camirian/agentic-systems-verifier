@@ -878,126 +878,133 @@ def render_mission_control():
                     st.exception(e)
 
             else:
-                # --- SINGLE ITEM INSPECTOR (Existing Logic) ---
+                # --- SINGLE ITEM INSPECTOR (Refactored) ---
                 selected_row = selected_rows.iloc[0]
                 st.markdown("#### 🔍 Requirement Inspector")
                 
-                # --- Compact Metadata Card ---
-                # Safely get method and rationale
-                method = selected_row.get('Verification Method', 'N/A')
-                if pd.isna(method) or method == "": method = "N/A"
+                # Create Tabs
+                tab_details, tab_code, tab_edit = st.tabs(["📄 Details", "🐍 Code", "🛠️ Edit"])
                 
-                rationale = selected_row.get('Rationale', 'No rationale provided.')
-                if pd.isna(rationale) or rationale == "": rationale = "No rationale provided."
-                
-                # HTML Rendering
-                st.markdown(f"""
-<div style="margin-bottom: 10px;">
-    <small style="color: #81A1C1;">ID: {selected_row['ID']}</small><br>
-    <strong style="font-size: 16px; color: #ECEFF4;">{selected_row['Requirement Name']}</strong>
-</div>
-
-<div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
-    <span style="background-color: #2E3440; padding: 4px 8px; border-radius: 4px; border: 1px solid #88C0D0; color: #88C0D0; font-size: 11px;">{selected_row['Status']}</span>
-    <span style="background-color: #2E3440; padding: 4px 8px; border-radius: 4px; border: 1px solid #A3BE8C; color: #A3BE8C; font-size: 11px;">{method}</span>
-    <span style="background-color: #2E3440; padding: 4px 8px; border-radius: 4px; border: 1px solid #EBCB8B; color: #EBCB8B; font-size: 11px;">{selected_row['Priority']}</span>
-    <span style="background-color: #2E3440; padding: 4px 8px; border-radius: 4px; border: 1px solid #5E81AC; color: #5E81AC; font-size: 11px;">{selected_row['Source']}</span>
-</div>
-
-<div style="margin-bottom: 15px;">
-    <small style="color: #81A1C1; font-weight: bold;">REQUIREMENT TEXT</small><br>
-    <div style="background-color: #3B4252; padding: 10px; border-radius: 5px; border-left: 4px solid #88C0D0; color: #ECEFF4;">
-        {selected_row['Requirement']}
+                # --- TAB 1: DETAILS ---
+                with tab_details:
+                    # Safely get method and rationale
+                    method = selected_row.get('Verification Method', 'N/A')
+                    if pd.isna(method) or method == "": method = "N/A"
+                    
+                    rationale = selected_row.get('Rationale', 'No rationale provided.')
+                    if pd.isna(rationale) or rationale == "": rationale = "No rationale provided."
+                    
+                    # HTML Rendering
+                    st.markdown(f"""
+    <div style="margin-bottom: 10px;">
+        <small style="color: #81A1C1;">ID: {selected_row['ID']}</small><br>
+        <strong style="font-size: 16px; color: #ECEFF4;">{selected_row['Requirement Name']}</strong>
     </div>
-</div>
 
-<div>
-    <small style="color: #81A1C1; font-weight: bold;">AI RATIONALE</small><br>
-    <div style="background-color: #2E3440; padding: 10px; border-radius: 5px; color: #D8DEE9; font-style: normal;">
-        "{rationale}"
+    <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+        <span style="background-color: #2E3440; padding: 4px 8px; border-radius: 4px; border: 1px solid #88C0D0; color: #88C0D0; font-size: 11px;">{selected_row['Status']}</span>
+        <span style="background-color: #2E3440; padding: 4px 8px; border-radius: 4px; border: 1px solid #A3BE8C; color: #A3BE8C; font-size: 11px;">{method}</span>
+        <span style="background-color: #2E3440; padding: 4px 8px; border-radius: 4px; border: 1px solid #EBCB8B; color: #EBCB8B; font-size: 11px;">{selected_row['Priority']}</span>
+        <span style="background-color: #2E3440; padding: 4px 8px; border-radius: 4px; border: 1px solid #5E81AC; color: #5E81AC; font-size: 11px;">{selected_row['Source']}</span>
     </div>
-</div>
-<br>
-""", unsafe_allow_html=True)
-                
-                # --- On-Demand Code Generator ---
-                if method == "Test":
-                    st.markdown("---")
-                    st.subheader("⚡ Agent Execution")
-                    
-                    # Check if code already exists
-                    existing_code = selected_row.get('Generated Code', '')
-                    if pd.isna(existing_code): existing_code = ""
-                    
-                    if st.button("Generate Test Script", use_container_width=True, type="primary"):
-                        if not api_key:
-                            st.error("Google API Key required.")
-                        else:
-                            with st.spinner("👨‍💻 Agent is writing code..."):
-                                engine = VerificationEngine(api_key)
-                                generated_code = engine.generate_test_code(selected_row['Requirement'])
-                                
-                                # Save to DB
-                                update_generated_code(selected_row['ID'], generated_code)
-                                
-                                # Update Session State
-                                main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == selected_row['ID']].index[0]
-                                st.session_state['requirements'].at[main_idx, 'Generated Code'] = generated_code
-                                
-                                st.success("Code Generated!")
-                                st.rerun()
-                    
-                    if existing_code:
-                        st.markdown("**📄 Generated Artifact:**")
-                        st.code(existing_code, language="python")
-                        st.download_button("📥 Download .py", existing_code, f"test_{selected_row['ID']}.py", mime="text/x-python")
+
+    <div style="margin-bottom: 15px;">
+        <small style="color: #81A1C1; font-weight: bold;">REQUIREMENT TEXT</small><br>
+        <div style="background-color: #3B4252; padding: 10px; border-radius: 5px; border-left: 4px solid #88C0D0; color: #ECEFF4;">
+            {selected_row['Requirement']}
+        </div>
+    </div>
+
+    <div>
+        <small style="color: #81A1C1; font-weight: bold;">AI RATIONALE</small><br>
+        <div style="background-color: #2E3440; padding: 10px; border-radius: 5px; color: #D8DEE9; font-style: normal;">
+            "{rationale}"
+        </div>
+    </div>
+    <br>
+    """, unsafe_allow_html=True)
+
+                # --- TAB 2: CODE ---
+                with tab_code:
+                    if method == "Test":
+                        st.subheader("⚡ Agent Execution")
                         
-                        # --- Execution Control ---
-                        col_run, col_status = st.columns([1, 2])
-                        with col_run:
-                            if st.button("▶️ Run Verification", type="secondary", use_container_width=True):
-                                with st.spinner("Executing tests..."):
+                        # Check if code already exists
+                        existing_code = selected_row.get('Generated Code', '')
+                        if pd.isna(existing_code): existing_code = ""
+                        
+                        if st.button("Generate Test Script", use_container_width=True, type="primary"):
+                            if not api_key:
+                                st.error("Google API Key required.")
+                            else:
+                                with st.spinner("👨‍💻 Agent is writing code..."):
                                     engine = VerificationEngine(api_key)
-                                    result = engine.execute_test_code(existing_code)
+                                    generated_code = engine.generate_test_code(selected_row['Requirement'])
                                     
-                                    # Save result
-                                    update_execution_result(selected_row['ID'], result['status'], result['log'])
+                                    # Save to DB
+                                    update_generated_code(selected_row['ID'], generated_code)
                                     
                                     # Update Session State
                                     main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == selected_row['ID']].index[0]
-                                    st.session_state['requirements'].at[main_idx, 'Verification Status'] = result['status']
-                                    st.session_state['requirements'].at[main_idx, 'Execution Log'] = result['log']
+                                    st.session_state['requirements'].at[main_idx, 'Generated Code'] = generated_code
                                     
-                                    if result['status'] == "Pass":
-                                        st.toast("Verification Passed!", icon="✅")
-                                    else:
-                                        st.toast("Verification Failed!", icon="❌")
+                                    st.success("Code Generated!")
                                     st.rerun()
+                        
+                        if existing_code:
+                            st.markdown("**📄 Generated Artifact:**")
+                            st.code(existing_code, language="python")
+                            st.download_button("📥 Download .py", existing_code, f"test_{selected_row['ID']}.py", mime="text/x-python")
+                            
+                            # --- Execution Control ---
+                            st.divider()
+                            col_run, col_status = st.columns([1, 2])
+                            with col_run:
+                                if st.button("▶️ Run Verification", type="secondary", use_container_width=True):
+                                    with st.spinner("Executing tests..."):
+                                        engine = VerificationEngine(api_key)
+                                        result = engine.execute_test_code(existing_code)
+                                        
+                                        # Save result
+                                        update_execution_result(selected_row['ID'], result['status'], result['log'])
+                                        
+                                        # Update Session State
+                                        main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == selected_row['ID']].index[0]
+                                        st.session_state['requirements'].at[main_idx, 'Verification Status'] = result['status']
+                                        st.session_state['requirements'].at[main_idx, 'Execution Log'] = result['log']
+                                        
+                                        if result['status'] == "Pass":
+                                            st.toast("Verification Passed!", icon="✅")
+                                        else:
+                                            st.toast("Verification Failed!", icon="❌")
+                                        st.rerun()
+    
+                            # Display Status
+                            exec_status = selected_row.get('Verification Status', None)
+                            if pd.isna(exec_status): exec_status = None
+                            
+                            with col_status:
+                                if exec_status == "Pass":
+                                    st.success("✅ VERIFICATION PASSED")
+                                elif exec_status == "Fail":
+                                    st.error("❌ VERIFICATION FAILED")
+                                elif exec_status == "Error":
+                                    st.warning("⚠️ EXECUTION ERROR")
+                            
+                            # Display Logs
+                            exec_log = selected_row.get('Execution Log', None)
+                            if pd.isna(exec_log): exec_log = None
+                            
+                            if exec_log:
+                                with st.expander("📜 Execution Logs", expanded=(exec_status != "Pass")):
+                                    st.code(exec_log, language="text")
+                    else:
+                        st.info("Code generation is only available for 'Test' method.")
 
-                        # Display Status
-                        exec_status = selected_row.get('Verification Status', None)
-                        if pd.isna(exec_status): exec_status = None
-                        
-                        with col_status:
-                            if exec_status == "Pass":
-                                st.success("✅ VERIFICATION PASSED")
-                            elif exec_status == "Fail":
-                                st.error("❌ VERIFICATION FAILED")
-                            elif exec_status == "Error":
-                                st.warning("⚠️ EXECUTION ERROR")
-                        
-                        # Display Logs
-                        exec_log = selected_row.get('Execution Log', None)
-                        if pd.isna(exec_log): exec_log = None
-                        
-                        if exec_log:
-                            with st.expander("📜 Execution Logs", expanded=(exec_status != "Pass")):
-                                st.code(exec_log, language="text")
-                
-                # --- Manual Controls (Moved to Bottom) ---
-                st.divider()
-                with st.expander("🛠️ Manual Overrides"):
-                    col1, col2, col3 = st.columns(3)
+                # --- TAB 3: EDIT ---
+                with tab_edit:
+                    st.markdown("#### 🛠️ Manual Overrides")
+                    col1, col2 = st.columns(2)
                     
                     with col1:
                         new_status = st.selectbox(
@@ -1006,16 +1013,15 @@ def render_mission_control():
                             index=["Pending", "Analyzed", "Verified", "Failed"].index(selected_row['Status']) if selected_row['Status'] in ["Pending", "Analyzed", "Verified", "Failed"] else 0,
                             key=f"status_{selected_row['ID']}"
                         )
-                    
-                    with col2:
+                        
                         new_priority = st.selectbox(
                             "Priority", 
                             options=["Low", "Medium", "High", "Critical"], 
                             index=["Low", "Medium", "High", "Critical"].index(selected_row['Priority']) if selected_row['Priority'] in ["Low", "Medium", "High", "Critical"] else 1,
                             key=f"priority_{selected_row['ID']}"
                         )
-
-                    with col3:
+                    
+                    with col2:
                         # Handle case where method might be empty or not in list
                         method_opts = ["Test", "Analysis", "Inspection", "Demonstration"]
                         current_method = selected_row.get('Verification Method', 'Analysis')
@@ -1034,7 +1040,8 @@ def render_mission_control():
                     current_method_val = selected_row.get('Verification Method', '')
                     
                     if (new_status != current_status) or (new_priority != current_priority) or (new_method != current_method_val):
-                        if st.button("💾 Save Overrides", use_container_width=True):
+                        st.markdown("<br>", unsafe_allow_html=True)
+                        if st.button("💾 Save Overrides", use_container_width=True, type="primary"):
                             # Update DB
                             update_requirement(
                                 req_id=selected_row['ID'],
