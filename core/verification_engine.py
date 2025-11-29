@@ -138,6 +138,48 @@ class VerificationEngine:
             code = response.text.replace("```python", "").replace("```", "").strip()
             
             return code
-        except Exception as e:
-            log_event(f"Code generation failed: {str(e)}", level="ERROR")
             return f"# Error generating code: {str(e)}"
+
+    def execute_test_code(self, code_str):
+        """
+        Executes the generated test code using pytest in a subprocess.
+        Returns a dict: {'status': 'Pass'|'Fail'|'Error', 'log': str}
+        """
+        import subprocess
+        import os
+        import uuid
+        
+        # Create a temporary test file
+        filename = f"tests/temp_test_{uuid.uuid4().hex}.py"
+        
+        try:
+            with open(filename, "w") as f:
+                f.write(code_str)
+            
+            # Run pytest
+            # -q: quiet
+            # --tb=short: shorter traceback
+            result = subprocess.run(
+                ["pytest", filename, "-q", "--tb=short"], 
+                capture_output=True, 
+                text=True,
+                timeout=10 # Safety timeout
+            )
+            
+            log_output = result.stdout + "\n" + result.stderr
+            
+            if result.returncode == 0:
+                status = "Pass"
+            else:
+                status = "Fail"
+                
+            return {"status": status, "log": log_output}
+            
+        except subprocess.TimeoutExpired:
+            return {"status": "Error", "log": "Execution timed out (10s limit)."}
+        except Exception as e:
+            return {"status": "Error", "log": f"Execution failed: {str(e)}"}
+        finally:
+            # Cleanup
+            if os.path.exists(filename):
+                os.remove(filename)
