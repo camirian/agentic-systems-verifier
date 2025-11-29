@@ -1021,10 +1021,17 @@ def render_mission_control():
                             st.rerun()
 
 
-        # --- Highlighted View (ReadOnly) ---
-        if not st.session_state['requirements'].empty:
-            modified_rows = st.session_state['requirements'][st.session_state['requirements']['Source'].str.contains("Modified")]
-            mod_count = len(modified_rows)
+        # --- Global Debug Footer ---
+        st.divider()
+        with st.expander("🐞 Debug & System Info", expanded=False):
+            st.caption(f"App Version: {datetime.datetime.now().strftime('%H:%M:%S')}")
+            st.write("Selection Count:", len(selected_rows))
+            if not selected_rows.empty:
+                st.write("Selected IDs:", selected_rows['ID'].tolist())
+                # Show method for first few
+                st.dataframe(selected_rows[['ID', 'Verification Method']].head())
+            else:
+                st.write("No rows selected.")
             
             if mod_count > 0:
                 st.divider()
