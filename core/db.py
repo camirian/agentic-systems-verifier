@@ -75,6 +75,35 @@ def init_db():
     
     # Run Migration
     migrate_projects_metadata()
+    check_and_migrate()
+
+def check_and_migrate():
+    """Explicitly check for and add missing columns (Defensive Migration)."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    # Check columns in requirements table
+    cursor.execute("PRAGMA table_info(requirements)")
+    columns = [info[1] for info in cursor.fetchall()]
+    
+    required_columns = [
+        "generated_code", 
+        "verification_method", 
+        "rationale", 
+        "verification_status", 
+        "execution_log"
+    ]
+    
+    for col in required_columns:
+        if col not in columns:
+            try:
+                cursor.execute(f"ALTER TABLE requirements ADD COLUMN {col} TEXT")
+                print(f"Migrated: Added column '{col}' to requirements table.")
+            except sqlite3.OperationalError:
+                pass # Already exists
+                
+    conn.commit()
+    conn.close()
 
 def migrate_projects_metadata():
     """Backfill projects table from existing requirements."""

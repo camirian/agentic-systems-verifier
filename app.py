@@ -784,6 +784,11 @@ def render_mission_control():
                     
                     # 1. Bulk Generate (Show for ALL Test items, allowing regeneration)
                     # Robust check: handle NaN, whitespace, case
+                    
+                    # DEFENSIVE: Ensure 'Generated Code' exists in the dataframe slice
+                    if 'Generated Code' not in full_selected_rows.columns:
+                        full_selected_rows['Generated Code'] = ""
+                        
                     test_candidates = full_selected_rows[
                         full_selected_rows['Verification Method'].fillna('').astype(str).str.strip().eq('Test')
                     ]
