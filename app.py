@@ -815,22 +815,30 @@ def render_mission_control():
                                 st.error("API Key required.")
                             else:
                                 progress_bar = st.progress(0)
-                                engine = VerificationEngine(api_key)
-                                
-                                for i, (index, row) in enumerate(test_candidates.iterrows()):
-                                    with st.spinner(f"Generating for {row['ID']}..."):
-                                        code = engine.generate_test_code(row['Requirement'])
-                                        update_generated_code(row['ID'], code)
-                                        
-                                        # Update Session State
-                                        main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == row['ID']].index[0]
-                                        st.session_state['requirements'].at[main_idx, 'Generated Code'] = code
+                            engine = VerificationEngine(api_key)
+                            generated_results = []
+                            
+                            for i, (index, row) in enumerate(test_candidates.iterrows()):
+                                with st.spinner(f"Generating for {row['ID']}..."):
+                                    code = engine.generate_test_code(row['Requirement'])
+                                    update_generated_code(row['ID'], code)
                                     
-                                    progress_bar.progress((i + 1) / len(test_candidates))
+                                    # Update Session State
+                                    main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == row['ID']].index[0]
+                                    st.session_state['requirements'].at[main_idx, 'Generated Code'] = code
+                                    
+                                    generated_results.append((row['ID'], code))
                                 
-                                st.success("Bulk Generation Complete!")
-                                time.sleep(1)
-                                st.rerun()
+                                progress_bar.progress((i + 1) / len(test_candidates))
+                            
+                            st.success(f"Bulk Generation Complete! Created {len(generated_results)} Test Scripts.")
+                            
+                            # Code Review Report
+                            if generated_results:
+                                st.markdown("### 📝 Generated Artifacts")
+                                for req_id, code in generated_results:
+                                    with st.expander(f"🐍 test_{req_id}.py", expanded=False):
+                                        st.code(code, language="python")
                     
                     # 2. Bulk Execute (Show for items with code)
                     # Robust check for non-empty code
@@ -914,17 +922,18 @@ def render_mission_control():
                 
                 # --- On-Demand Code Generator ---
                 if method == "Test":
-                    st.markdown("#### ⚡ Code Generator")
+                    st.markdown("---")
+                    st.subheader("⚡ Agent Execution")
                     
                     # Check if code already exists
                     existing_code = selected_row.get('Generated Code', '')
                     if pd.isna(existing_code): existing_code = ""
                     
-                    if st.button("Generate Test Case", use_container_width=True, type="primary"):
+                    if st.button("Generate Test Script", use_container_width=True, type="primary"):
                         if not api_key:
                             st.error("Google API Key required.")
                         else:
-                            with st.spinner("Writing pytest script..."):
+                            with st.spinner("👨‍💻 Agent is writing code..."):
                                 engine = VerificationEngine(api_key)
                                 generated_code = engine.generate_test_code(selected_row['Requirement'])
                                 
@@ -939,8 +948,9 @@ def render_mission_control():
                                 st.rerun()
                     
                     if existing_code:
-                        st.caption("✅ Generated Verification Script")
+                        st.markdown("**📄 Generated Artifact:**")
                         st.code(existing_code, language="python")
+                        st.download_button("📥 Download .py", existing_code, f"test_{selected_row['ID']}.py", mime="text/x-python")
                         
                         # --- Execution Control ---
                         col_run, col_status = st.columns([1, 2])
