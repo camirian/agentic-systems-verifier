@@ -741,10 +741,17 @@ def render_mission_control():
                 # --- BULK ACTIONS ---
                 st.markdown(f"#### 📦 Bulk Actions ({len(selected_rows)} items)")
                 
+                # CRITICAL FIX: selected_rows (from UI) lacks 'Generated Code' column.
+                # We must fetch the full data from session state using the IDs.
+                selected_ids = selected_rows['ID'].tolist()
+                full_selected_rows = st.session_state['requirements'][
+                    st.session_state['requirements']['ID'].isin(selected_ids)
+                ]
+                
                 # 1. Bulk Generate (Show for ALL Test items, allowing regeneration)
                 # Robust check: handle NaN, whitespace, case
-                test_candidates = selected_rows[
-                    selected_rows['Verification Method'].fillna('').astype(str).str.strip().eq('Test')
+                test_candidates = full_selected_rows[
+                    full_selected_rows['Verification Method'].fillna('').astype(str).str.strip().eq('Test')
                 ]
                 
                 actions_available = False
@@ -781,7 +788,7 @@ def render_mission_control():
                 
                 # 2. Bulk Execute (Show for items with code)
                 # Robust check for non-empty code
-                ready_to_run = selected_rows[selected_rows['Generated Code'].fillna('').ne('')]
+                ready_to_run = full_selected_rows[full_selected_rows['Generated Code'].fillna('').ne('')]
                 
                 if not ready_to_run.empty:
                     actions_available = True
