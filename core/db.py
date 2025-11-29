@@ -26,6 +26,10 @@ def init_db():
             source_type TEXT,
             verification_method TEXT,
             rationale TEXT,
+            generated_code TEXT,
+            verification_status TEXT,
+            execution_log TEXT,
+            last_run_timestamp DATETIME,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -279,6 +283,7 @@ def update_verification_result(req_id: str, status: str, verification_method: st
         UPDATE requirements 
         SET status = ?, verification_method = ?, rationale = ?
         WHERE id = ?
+```
     ''', (status, verification_method, rationale, req_id))
     
     conn.commit()
@@ -295,6 +300,18 @@ def update_generated_code(req_id: str, code: str):
         WHERE id = ?
     ''', (code, req_id))
     
+    conn.commit()
+    conn.close()
+
+def update_execution_result(req_id, status, log):
+    """Update the execution result (Pass/Fail) and log."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute('''
+        UPDATE requirements
+        SET verification_status = ?, execution_log = ?, last_run_timestamp = CURRENT_TIMESTAMP
+        WHERE id = ?
+    ''', (status, log, req_id))
     conn.commit()
     conn.close()
 
