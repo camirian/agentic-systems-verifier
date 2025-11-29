@@ -766,6 +766,13 @@ def render_mission_control():
                     st.session_state['requirements']['ID'].isin(selected_ids)
                 ]
                 
+                # DEBUG: Show what we found
+                with st.expander("🐞 Debug Data", expanded=True):
+                    st.write("Selected IDs:", selected_ids)
+                    st.write("Full Rows Found:", len(full_selected_rows))
+                    if not full_selected_rows.empty:
+                        st.dataframe(full_selected_rows[['ID', 'Verification Method', 'Generated Code']])
+                
                 # 1. Bulk Generate (Show for ALL Test items, allowing regeneration)
                 # Robust check: handle NaN, whitespace, case
                 test_candidates = full_selected_rows[
