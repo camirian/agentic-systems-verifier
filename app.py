@@ -927,7 +927,9 @@ def render_mission_control():
                                         # Update Session
                                         main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == selected_row['ID']].index[0]
                                         st.session_state['requirements'].at[main_idx, 'Generated Code'] = generated_code
-                                        st.rerun()
+                                    
+                                    st.toast("✅ Test Code Generated Successfully!", icon="🎉")
+                                    st.rerun()
                         else:
                             st.markdown("#### 🐍 Verification Agent")
                             st.code(existing_code, language="python")
@@ -946,6 +948,8 @@ def render_mission_control():
                                         main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == selected_row['ID']].index[0]
                                         st.session_state['requirements'].at[main_idx, 'Verification Status'] = result['status']
                                         st.session_state['requirements'].at[main_idx, 'Execution Log'] = result['log']
+                                        
+                                        st.toast("✅ Verification Complete!", icon="🧠")
                                         st.rerun()
                             
                             # Execution Results
