@@ -12,19 +12,20 @@ def process_batch(batch_index, batch_text, model):
     """
     try:
         prompt = f"""
-        Analyze the following technical specification text. Extract all 'Shall' statements. 
+        Analyze the following technical specification text. Extract all **Technical Requirements**.
+        Look for keywords like "Shall", "Must", "Should", "Will", "Required", or implicit mandatory statements.
         
         Return a JSON list where each item has: 
         {{
             'id': 'The Requirement ID (e.g., BPv6-001)', 
             'name': 'The Name or Title of the requirement (e.g., BP Bundle Structure)', 
-            'text': 'The full sentence containing the shall statement', 
+            'text': 'The full sentence containing the requirement', 
             'priority': 'Medium'
         }}
         
         RULES:
         1. The 'Name' is the bold text or title preceding the sentence. If not explicitly clear, infer it from the context immediately preceding the ID.
-        2. The 'Text' is the full sentence containing 'shall'.
+        2. The 'Text' is the full statement of the requirement.
         3. Exclude Tables and Figures.
         4. If no ID is present, generate one like 'REQ-GEN-<UUID>'.
         
@@ -133,14 +134,16 @@ def extract_requirements_from_pdf(file_path, api_key, target_section=None, progr
             log_event("Full scan enabled. Filtering for pages with 'shall'.")
             for i in range(total_pages):
                 text = reader.pages[i].extract_text()
-                # Simple heuristic: Only process pages that mention "shall"
-                if "shall" in text.lower():
+                # Expanded heuristic: Process pages with any requirement keywords
+                text_lower = text.lower()
+                keywords = ["shall", "must", "should", "will", "require", "mandatory", "specification", "constraint"]
+                if any(k in text_lower for k in keywords):
                     pages_to_process.append((i, text))
             
             if not pages_to_process:
-                log_event("No 'shall' statements found in the entire document.", level="WARN")
+                log_event("No requirement keywords found in the entire document.", level="WARN")
                 if progress_callback:
-                    progress_callback(1.0, "No 'shall' statements found in document.")
+                    progress_callback(1.0, "No requirement keywords found in document.")
                 return [], doc_title
         else:
             # Smart Scan: Find pages with target_section
