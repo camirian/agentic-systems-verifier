@@ -370,7 +370,12 @@ def render_mission_control():
         # 1. API Key (Hidden in Expander)
         with st.expander("🔐 API Credentials", expanded=False):
             # Check for secret key (Demo Mode)
-            default_key = st.secrets.get("GOOGLE_API_KEY", "")
+            try:
+                default_key = st.secrets.get("GOOGLE_API_KEY", "")
+            except (FileNotFoundError, Exception):
+                # Handle cases where secrets.toml is missing or other secrets errors
+                default_key = ""
+            
             api_key = st.text_input("Google API Key", value=default_key, type="password", help="Required for AI Extraction. Leave empty to use system default if configured.")
         
         # 2. Mission Setup (Grouped)
