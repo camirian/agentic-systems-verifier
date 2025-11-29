@@ -554,7 +554,9 @@ def render_mission_control():
                 ]
         with col_act3:
             # Custom Export Button (High Visibility)
-            csv_data = df_view.to_csv(index=False).encode('utf-8')
+            # Ensure evidence columns are included
+            export_cols = [c for c in df_view.columns if c != "Select"]
+            csv_data = df_view[export_cols].to_csv(index=False).encode('utf-8')
             st.download_button(
                 label="💾 Export to CSV",
                 data=csv_data,
