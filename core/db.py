@@ -283,7 +283,6 @@ def update_verification_result(req_id: str, status: str, verification_method: st
         UPDATE requirements 
         SET status = ?, verification_method = ?, rationale = ?
         WHERE id = ?
-```
     ''', (status, verification_method, rationale, req_id))
     
     conn.commit()
