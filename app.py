@@ -298,7 +298,7 @@ def render_mission_control():
         st.markdown("---")
         
         # --- Project Selection (Global) ---
-        st.sidebar.header("📂 Active Specification")
+        st.sidebar.markdown("### 📂 Active Specification")
         
         # Fetch projects with metadata
         projects = get_all_projects() # Returns list of dicts
@@ -344,10 +344,7 @@ def render_mission_control():
             on_change=on_project_change,
             label_visibility="collapsed"
         )
-        st.divider()
-        
 
-        st.divider()
 
         # --- Mission Phase Tracker (Logic Only) ---
         reqs = st.session_state['requirements']
@@ -448,71 +445,6 @@ def render_mission_control():
 
         st.divider()
         
-        # 3. Execution Controls
-        st.markdown("#### 🚀 Execution")
-        
-        # Session State for Verification Loop
-        if 'is_verifying' not in st.session_state:
-            st.session_state['is_verifying'] = False
-
-        if st.session_state['is_verifying']:
-            # STOP BUTTON
-            if st.button("⏹️ Stop Verification", type="secondary", use_container_width=True):
-                st.session_state['is_verifying'] = False
-                st.rerun()
-            
-            # Verification Logic (Runs automatically when state is True)
-            if not api_key:
-                st.error("API Key required for verification.")
-                st.session_state['is_verifying'] = False
-                st.stop()
-            else:
-                # Default to None if empty (Verify All)
-                section_scope = target_section if target_section else None
-                
-                engine = VerificationEngine(api_key)
-                
-                # Progress UI
-                progress_text = "Starting Verification Plan..."
-                my_bar = st.progress(0, text=progress_text)
-                status_text = st.empty()
-                
-                # Check if a single requirement is selected in the UI
-                selected_id = st.session_state.get('selected_req_id')
-                
-                try:
-                    if selected_id:
-                        # Verify ONLY the selected requirement
-                        for log_msg in engine.verify_single_requirement(selected_id):
-                            status_text.text(log_msg)
-                    else:
-                        # Verify based on section scope (or all)
-                        for log_msg in engine.verify_section(section_scope):
-                            status_text.text(log_msg)
-                            
-                    my_bar.progress(100, text="Verification Complete!")
-                    st.success("Verification Analysis Complete.")
-                    time.sleep(1)
-                    
-                    # Reset state after success
-                    st.session_state['is_verifying'] = False
-                    st.rerun()
-                    
-                except Exception as e:
-                    st.error(f"Verification Failed: {e}")
-                    log_event(f"Verification Failed: {e}", level="ERROR")
-                    st.session_state['is_verifying'] = False
-
-        else:
-            # START BUTTON
-            if st.button("▶️ Generate Verification Plan", use_container_width=True, type="primary"):
-                if not api_key:
-                    st.error("API Key required for verification.")
-                else:
-                    st.session_state['is_verifying'] = True
-                    st.rerun()
-
-    # Main Layout
     # Main Layout
     st.title("ASV: Agentic Systems Verifier")
 
@@ -1125,6 +1057,74 @@ def render_mission_control():
                 """, unsafe_allow_html=True)
 
     with tab3:
+        st.subheader("Verification Report")
+        
+        # --- Execution Controls
+        st.markdown("#### 🚀 Global Verification")
+        
+        # Session State for Verification Loop
+        if 'is_verifying' not in st.session_state:
+            st.session_state['is_verifying'] = False
+
+        if st.session_state['is_verifying']:
+            # STOP BUTTON
+            if st.button("⏹️ Stop Verification", type="secondary", use_container_width=True):
+                st.session_state['is_verifying'] = False
+                st.rerun()
+            
+            # Verification Logic (Runs automatically when state is True)
+            if not api_key:
+                st.error("API Key required for verification.")
+                st.session_state['is_verifying'] = False
+                st.stop()
+            else:
+                # Default to None if empty (Verify All)
+                section_scope = None 
+                
+                engine = VerificationEngine(api_key)
+                
+                # Progress UI
+                progress_text = "Starting Verification Plan..."
+                my_bar = st.progress(0, text=progress_text)
+                status_text = st.empty()
+                
+                # Check if a single requirement is selected in the UI
+                selected_id = st.session_state.get('selected_req_id')
+                
+                try:
+                    if selected_id:
+                        # Verify ONLY the selected requirement
+                        for log_msg in engine.verify_single_requirement(selected_id):
+                            status_text.text(log_msg)
+                    else:
+                        # Verify based on section scope (or all)
+                        for log_msg in engine.verify_section(section_scope):
+                            status_text.text(log_msg)
+                            
+                    my_bar.progress(100, text="Verification Complete!")
+                    st.success("Verification Analysis Complete.")
+                    st.toast("Verification Complete!", icon="✅")
+                    time.sleep(1)
+                    
+                    # Reset state after success
+                    st.session_state['is_verifying'] = False
+                    st.rerun()
+                    
+                except Exception as e:
+                    st.error(f"Verification Failed: {e}")
+                    log_event(f"Verification Failed: {e}", level="ERROR")
+                    st.session_state['is_verifying'] = False
+
+        else:
+            # START BUTTON
+            if st.button("▶️ Generate Verification Plan (All)", use_container_width=True, type="primary"):
+                if not api_key:
+                    st.error("API Key required for verification.")
+                else:
+                    st.session_state['is_verifying'] = True
+                    st.rerun()
+        
+        st.divider()
         st.subheader("Verification Plan Analysis")
         
         # --- Dashboard Guide ---
