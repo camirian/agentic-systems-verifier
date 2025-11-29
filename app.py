@@ -9,7 +9,7 @@ import datetime
 import time
 import os
 from core.ingestion import extract_requirements_from_pdf
-from core.db import init_db, save_requirements, get_requirements, update_requirement, clear_database, log_event, get_system_logs, get_all_projects, update_generated_code
+from core.db import init_db, save_requirements, get_requirements, update_requirement, clear_database, log_event, get_system_logs, get_all_projects, update_generated_code, update_execution_result
 from core.verification_engine import VerificationEngine
 from core.pdf_utils import convert_md_to_pdf
 
@@ -776,6 +776,48 @@ def render_mission_control():
                     if existing_code:
                         st.caption("✅ Generated Verification Script")
                         st.code(existing_code, language="python")
+                        
+                        # --- Execution Control ---
+                        col_run, col_status = st.columns([1, 2])
+                        with col_run:
+                            if st.button("▶️ Run Verification", type="secondary", use_container_width=True):
+                                with st.spinner("Executing tests..."):
+                                    engine = VerificationEngine(api_key)
+                                    result = engine.execute_test_code(existing_code)
+                                    
+                                    # Save result
+                                    update_execution_result(selected_row['ID'], result['status'], result['log'])
+                                    
+                                    # Update Session State
+                                    main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == selected_row['ID']].index[0]
+                                    st.session_state['requirements'].at[main_idx, 'Verification Status'] = result['status']
+                                    st.session_state['requirements'].at[main_idx, 'Execution Log'] = result['log']
+                                    
+                                    if result['status'] == "Pass":
+                                        st.toast("Verification Passed!", icon="✅")
+                                    else:
+                                        st.toast("Verification Failed!", icon="❌")
+                                    st.rerun()
+
+                        # Display Status
+                        exec_status = selected_row.get('Verification Status', None)
+                        if pd.isna(exec_status): exec_status = None
+                        
+                        with col_status:
+                            if exec_status == "Pass":
+                                st.success("✅ VERIFICATION PASSED")
+                            elif exec_status == "Fail":
+                                st.error("❌ VERIFICATION FAILED")
+                            elif exec_status == "Error":
+                                st.warning("⚠️ EXECUTION ERROR")
+                        
+                        # Display Logs
+                        exec_log = selected_row.get('Execution Log', None)
+                        if pd.isna(exec_log): exec_log = None
+                        
+                        if exec_log:
+                            with st.expander("📜 Execution Logs", expanded=(exec_status != "Pass")):
+                                st.code(exec_log, language="text")
                 
                 # --- Manual Controls (Moved to Bottom) ---
                 st.divider()
