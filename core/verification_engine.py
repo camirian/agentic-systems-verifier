@@ -138,6 +138,8 @@ class VerificationEngine:
             code = response.text.replace("```python", "").replace("```", "").strip()
             
             return code
+        except Exception as e:
+            log_event(f"Code generation failed: {str(e)}", level="ERROR")
             return f"# Error generating code: {str(e)}"
 
     def execute_test_code(self, code_str):
