@@ -700,12 +700,95 @@ def render_mission_control():
         # Find selected rows based on the 'Select' column
         selected_rows = edited_df[edited_df['Select'] == True]
         
-        if not selected_rows.empty:
-            # Get the first selected row
-            selected_row = selected_rows.iloc[0]
+        with st.sidebar:
+            st.divider()
             
-            with st.sidebar:
-                st.divider()
+            # --- HELP / USER GUIDE ---
+            with st.expander("❓ User Guide & Workflow"):
+                st.markdown("""
+                **1. Select Requirements**
+                Check the boxes in the table to select requirements.
+                
+                **2. Generate Verification Plans**
+                - **Inspection:** For manual checks (no code).
+                - **Test:** For automated checks (requires code).
+                - *Note: You can change the method in "Manual Overrides".*
+                
+                **3. Execute & Verify**
+                Click **"Generate Test Case"** (if Test) and then **"Run Verification"**.
+                
+                **4. Export Evidence**
+                Use the "Export to CSV" button to download the full report, including generated code and execution logs.
+                """)
+            
+            st.divider()
+
+            if selected_rows.empty:
+                st.info("👈 Select requirements in the table to view details or perform actions.")
+            
+            elif len(selected_rows) > 1:
+                # --- BULK ACTIONS ---
+                st.markdown(f"#### 📦 Bulk Actions ({len(selected_rows)} items)")
+                
+                # 1. Bulk Generate
+                test_candidates = selected_rows[selected_rows['Verification Method'] == 'Test']
+                missing_code = test_candidates[test_candidates['Generated Code'] == '']
+                
+                if not missing_code.empty:
+                    st.markdown(f"**Pending Generation:** {len(missing_code)} items")
+                    if st.button(f"⚡ Generate Code for {len(missing_code)} Items", type="primary", use_container_width=True):
+                        if not api_key:
+                            st.error("API Key required.")
+                        else:
+                            progress_bar = st.progress(0)
+                            engine = VerificationEngine(api_key)
+                            
+                            for i, (index, row) in enumerate(missing_code.iterrows()):
+                                with st.spinner(f"Generating for {row['ID']}..."):
+                                    code = engine.generate_test_code(row['Requirement'])
+                                    update_generated_code(row['ID'], code)
+                                    
+                                    # Update Session State
+                                    main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == row['ID']].index[0]
+                                    st.session_state['requirements'].at[main_idx, 'Generated Code'] = code
+                                
+                                progress_bar.progress((i + 1) / len(missing_code))
+                            
+                            st.success("Bulk Generation Complete!")
+                            time.sleep(1)
+                            st.rerun()
+                
+                # 2. Bulk Execute
+                ready_to_run = selected_rows[selected_rows['Generated Code'] != '']
+                
+                if not ready_to_run.empty:
+                    st.markdown(f"**Ready to Execute:** {len(ready_to_run)} items")
+                    if st.button(f"▶️ Run Verification for {len(ready_to_run)} Items", type="secondary", use_container_width=True):
+                        if not api_key:
+                            st.error("API Key required.")
+                        else:
+                            progress_bar = st.progress(0)
+                            engine = VerificationEngine(api_key)
+                            
+                            for i, (index, row) in enumerate(ready_to_run.iterrows()):
+                                with st.spinner(f"Executing {row['ID']}..."):
+                                    result = engine.execute_test_code(row['Generated Code'])
+                                    update_execution_result(row['ID'], result['status'], result['log'])
+                                    
+                                    # Update Session State
+                                    main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == row['ID']].index[0]
+                                    st.session_state['requirements'].at[main_idx, 'Verification Status'] = result['status']
+                                    st.session_state['requirements'].at[main_idx, 'Execution Log'] = result['log']
+                                
+                                progress_bar.progress((i + 1) / len(ready_to_run))
+                            
+                            st.success("Bulk Execution Complete!")
+                            time.sleep(1)
+                            st.rerun()
+
+            else:
+                # --- SINGLE ITEM INSPECTOR (Existing Logic) ---
+                selected_row = selected_rows.iloc[0]
                 st.markdown("#### 🔍 Requirement Inspector")
                 
                 # --- Compact Metadata Card ---
@@ -716,7 +799,6 @@ def render_mission_control():
                 rationale = selected_row.get('Rationale', 'No rationale provided.')
                 if pd.isna(rationale) or rationale == "": rationale = "No rationale provided."
                 
-                # HTML Rendering
                 # HTML Rendering
                 st.markdown(f"""
 <div style="margin-bottom: 10px;">
@@ -881,10 +963,6 @@ def render_mission_control():
                             st.rerun()
 
 
-        else:
-            # Empty State - Show nothing as per request
-            pass
-    
         # --- Highlighted View (ReadOnly) ---
         if not st.session_state['requirements'].empty:
             modified_rows = st.session_state['requirements'][st.session_state['requirements']['Source'].str.contains("Modified")]
