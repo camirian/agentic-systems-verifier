@@ -1048,6 +1048,18 @@ def render_mission_control():
 
         # --- Global Debug Footer ---
         st.divider()
+        
+        # --- FIX: Calculate mod_count before using it ---
+        if 'requirements' in st.session_state and not st.session_state['requirements'].empty:
+            # Filter rows where Source contains "Modified"
+            modified_items = st.session_state['requirements'][
+                st.session_state['requirements']['Source'].astype(str).str.contains("Modified", case=False, na=False)
+            ]
+            mod_count = len(modified_items)
+        else:
+            mod_count = 0
+        # -----------------------------------------------
+
         with st.expander("🐞 Debug & System Info", expanded=False):
             st.caption(f"App Version: {datetime.datetime.now().strftime('%H:%M:%S')}")
             st.write("Selection Count:", len(selected_rows))
