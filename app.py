@@ -763,11 +763,13 @@ def render_mission_control():
                     # CRITICAL FIX: selected_rows (from UI) lacks 'Generated Code' column.
                     # We must fetch the full data from session state using the IDs.
                     selected_ids = selected_rows['ID'].tolist()
+                    # Use .copy() to ensure we can modify this slice (add columns) without warnings/errors
                     full_selected_rows = st.session_state['requirements'][
                         st.session_state['requirements']['ID'].isin(selected_ids)
-                    ]
+                    ].copy()
                     
                     # Local Failsafe: Ensure columns exist in the slice
+                    # Since it's a copy, this is safe and effective
                     if 'Generated Code' not in full_selected_rows.columns:
                         full_selected_rows['Generated Code'] = ""
                     if 'Verification Method' not in full_selected_rows.columns:
