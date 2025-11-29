@@ -6,3 +6,4 @@ pypdf
 plotly
 markdown
 pytest
+fpdf
