@@ -742,9 +742,15 @@ def render_mission_control():
                 st.markdown(f"#### 📦 Bulk Actions ({len(selected_rows)} items)")
                 
                 # 1. Bulk Generate (Show for ALL Test items, allowing regeneration)
-                test_candidates = selected_rows[selected_rows['Verification Method'] == 'Test']
+                # Robust check: handle NaN, whitespace, case
+                test_candidates = selected_rows[
+                    selected_rows['Verification Method'].fillna('').astype(str).str.strip().eq('Test')
+                ]
+                
+                actions_available = False
                 
                 if not test_candidates.empty:
+                    actions_available = True
                     # Count how many are missing code
                     missing_count = test_candidates['Generated Code'].fillna('').eq('').sum()
                     btn_label = f"⚡ Generate Code for {len(test_candidates)} Items"
@@ -778,6 +784,7 @@ def render_mission_control():
                 ready_to_run = selected_rows[selected_rows['Generated Code'].fillna('').ne('')]
                 
                 if not ready_to_run.empty:
+                    actions_available = True
                     st.markdown(f"**Ready to Execute:** {len(ready_to_run)} items")
                     if st.button(f"▶️ Run Verification for {len(ready_to_run)} Items", type="secondary", use_container_width=True):
                         if not api_key:
@@ -801,6 +808,9 @@ def render_mission_control():
                             st.success("Bulk Execution Complete!")
                             time.sleep(1)
                             st.rerun()
+                            
+                if not actions_available:
+                    st.warning("No actions available for selected items. Ensure they are set to 'Test' method.")
 
             else:
                 # --- SINGLE ITEM INSPECTOR (Existing Logic) ---
