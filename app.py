@@ -562,11 +562,12 @@ def render_mission_control():
                 df_view = df_view[df_view["Verification Method"].isin(filter_method)]
 
         # --- Interactive Dataframe ---
+        # --- Interactive Dataframe ---
         # Action Bar (Custom Toolbar)
-        col_act1, col_act2, col_act3 = st.columns([2, 2, 1])
-        with col_act1:
-            st.caption("👇 Click checkboxes to select rows. Use 'Select All' to bulk select.")
-        with col_act2:
+        # Layout: [ Search (Large) ] [ Select All ] [ Deselect ] [ Export ]
+        t_col1, t_col2, t_col3, t_col4 = st.columns([4, 1.5, 1.5, 1.5])
+        
+        with t_col1:
             search_query = st.text_input("Search", placeholder="🔍 Search ID, Name, or Text...", label_visibility="collapsed")
             if search_query:
                 df_view = df_view[
@@ -574,17 +575,29 @@ def render_mission_control():
                     df_view["Requirement Name"].str.contains(search_query, case=False, na=False) |
                     df_view["Requirement"].str.contains(search_query, case=False, na=False)
                 ]
-        with col_act3:
-            # Custom Export Button (High Visibility)
+        
+        with t_col2:
+            if st.button("✅ Select All", key="select_all_btn", use_container_width=True, type="secondary"):
+                # Set Select=True for all IDs in the current view
+                shown_ids = df_view['ID'].tolist()
+                st.session_state['requirements'].loc[st.session_state['requirements']['ID'].isin(shown_ids), 'Select'] = True
+                st.rerun()
+
+        with t_col3:
+            if st.button("❌ Deselect", key="deselect_all_btn", use_container_width=True, type="secondary"):
+                st.session_state['requirements']['Select'] = False
+                st.rerun()
+
+        with t_col4:
+            # Custom Export Button
             # Ensure evidence columns are included
             export_cols = [c for c in df_view.columns if c != "Select"]
             csv_data = df_view[export_cols].to_csv(index=False).encode('utf-8')
             st.download_button(
-                label="💾 Export to CSV",
+                label="💾 Export CSV",
                 data=csv_data,
                 file_name=f"requirements_trace_{datetime.datetime.now().strftime('%Y%m%d')}.csv",
                 mime="text/csv",
-                help="Download the currently filtered requirements matrix for external analysis.",
                 use_container_width=True
             )
         
@@ -606,17 +619,6 @@ def render_mission_control():
                         # Update main dataframe
                         main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == req_id].index[0]
                         st.session_state['requirements'].at[main_idx, 'Select'] = changes["Select"]
-
-        # Add Select All Button Logic
-        if st.button("✅ Select All Shown", key="select_all_btn"):
-            # Set Select=True for all IDs in the current view
-            shown_ids = df_view['ID'].tolist()
-            st.session_state['requirements'].loc[st.session_state['requirements']['ID'].isin(shown_ids), 'Select'] = True
-            st.rerun()
-            
-        if st.button("❌ Deselect All", key="deselect_all_btn"):
-            st.session_state['requirements']['Select'] = False
-            st.rerun()
 
         # Prepare View
         # We must sync df_view's Select column with the main dataframe
