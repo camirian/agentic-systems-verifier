@@ -499,6 +499,10 @@ def render_mission_control():
     with tab1:
         st.subheader("Requirements Traceability Matrix")
         
+        # Ensure 'Select' column exists in session state (Initialize early)
+        if 'Select' not in st.session_state['requirements'].columns:
+            st.session_state['requirements']['Select'] = False
+        
         # Capture previous state for comparison (CM)
         previous_df = st.session_state['requirements'].copy()
         
@@ -567,9 +571,7 @@ def render_mission_control():
             )
         
         # --- Selection Logic (Multi-Select Support) ---
-        # Ensure 'Select' column exists in session state
-        if 'Select' not in st.session_state['requirements'].columns:
-            st.session_state['requirements']['Select'] = False
+        # (Select column initialization moved to top of function)
 
         def handle_selection_change():
             # Get the edited rows from the data_editor state
