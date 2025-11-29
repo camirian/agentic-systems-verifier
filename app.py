@@ -543,7 +543,7 @@ def render_mission_control():
         # Action Bar (Custom Toolbar)
         col_act1, col_act2, col_act3 = st.columns([2, 2, 1])
         with col_act1:
-            st.caption("👇 Click any row to inspect details in the Mission Control sidebar.")
+            st.caption("👇 Click checkboxes to select rows. Use 'Select All' to bulk select.")
         with col_act2:
             search_query = st.text_input("Search", placeholder="🔍 Search ID, Name, or Text...", label_visibility="collapsed")
             if search_query:
@@ -566,40 +566,47 @@ def render_mission_control():
                 use_container_width=True
             )
         
-        # --- Selection Logic (Radio Button Behavior) ---
-        if 'selected_req_id' not in st.session_state:
-            st.session_state['selected_req_id'] = None
+        # --- Selection Logic (Multi-Select Support) ---
+        # Ensure 'Select' column exists in session state
+        if 'Select' not in st.session_state['requirements'].columns:
+            st.session_state['requirements']['Select'] = False
 
         def handle_selection_change():
             # Get the edited rows from the data_editor state
             editor_state = st.session_state.get("data_editor", {})
             edited_rows = editor_state.get("edited_rows", {})
             
-            # Iterate through changes to find if 'Select' was toggled
+            # Update the main dataframe based on user clicks
             for idx, changes in edited_rows.items():
                 if "Select" in changes:
-                    if changes["Select"] is True:
-                        # User checked this row -> Make it the single selection
-                        # We need to map the display index back to the actual ID
-                        # Note: df_view might have changed order due to sort/filter, 
-                        # but edited_rows uses the index of the dataframe passed to data_editor.
-                        # Since we recreate df_view every run, the index should match.
-                        if idx in df_view.index:
-                            st.session_state['selected_req_id'] = df_view.loc[idx, "ID"]
-                    else:
-                        # User unchecked this row
-                        # If it was the currently selected one, deselect it
-                        if idx in df_view.index:
-                            unselected_id = df_view.loc[idx, "ID"]
-                            if st.session_state['selected_req_id'] == unselected_id:
-                                st.session_state['selected_req_id'] = None
+                    # idx is the index in df_view. We need to map it to the main dataframe index.
+                    # Since df_view is a filtered view, we need the ID to find the row in main DF.
+                    if idx in df_view.index:
+                        req_id = df_view.loc[idx, "ID"]
+                        # Update main dataframe
+                        main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == req_id].index[0]
+                        st.session_state['requirements'].at[main_idx, 'Select'] = changes["Select"]
 
-        # Add a 'Select' column based on the tracked ID
-        # This enforces that only the stored ID is checked in the UI
-        df_view.insert(0, "Select", df_view["ID"] == st.session_state['selected_req_id'])
+        # Add Select All Button Logic
+        if st.button("✅ Select All Shown", key="select_all_btn"):
+            # Set Select=True for all IDs in the current view
+            shown_ids = df_view['ID'].tolist()
+            st.session_state['requirements'].loc[st.session_state['requirements']['ID'].isin(shown_ids), 'Select'] = True
+            st.rerun()
+            
+        if st.button("❌ Deselect All", key="deselect_all_btn"):
+            st.session_state['requirements']['Select'] = False
+            st.rerun()
+
+        # Prepare View
+        # We must sync df_view's Select column with the main dataframe
+        # (df_view is a copy, so we need to ensure it has the latest Select values)
+        # Actually, we created df_view from session_state['requirements'] at line 531.
+        # So it already has the 'Select' column if we added it.
         
-        # Reorder Columns for Dashboard Look
-        # Ensure all columns exist before selecting
+        # Reorder Columns: Select first
+        cols = ['Select'] + [c for c in df_view.columns if c != 'Select']
+        df_view = df_view[cols]
         cols_to_show = ['Select', 'ID', 'Verification Method', 'Requirement Name', 'Requirement', 'Rationale', 'Status', 'Priority', 'Source']
         # Filter to only columns that actually exist in df_view (avoid key error)
         cols_to_show = [c for c in cols_to_show if c in df_view.columns]
@@ -732,20 +739,24 @@ def render_mission_control():
                 # --- BULK ACTIONS ---
                 st.markdown(f"#### 📦 Bulk Actions ({len(selected_rows)} items)")
                 
-                # 1. Bulk Generate
+                # 1. Bulk Generate (Show for ALL Test items, allowing regeneration)
                 test_candidates = selected_rows[selected_rows['Verification Method'] == 'Test']
-                missing_code = test_candidates[test_candidates['Generated Code'] == '']
                 
-                if not missing_code.empty:
-                    st.markdown(f"**Pending Generation:** {len(missing_code)} items")
-                    if st.button(f"⚡ Generate Code for {len(missing_code)} Items", type="primary", use_container_width=True):
+                if not test_candidates.empty:
+                    # Count how many are missing code
+                    missing_count = test_candidates['Generated Code'].fillna('').eq('').sum()
+                    btn_label = f"⚡ Generate Code for {len(test_candidates)} Items"
+                    if missing_count < len(test_candidates):
+                        btn_label += f" ({len(test_candidates) - missing_count} will be overwritten)"
+                    
+                    if st.button(btn_label, type="primary", use_container_width=True):
                         if not api_key:
                             st.error("API Key required.")
                         else:
                             progress_bar = st.progress(0)
                             engine = VerificationEngine(api_key)
                             
-                            for i, (index, row) in enumerate(missing_code.iterrows()):
+                            for i, (index, row) in enumerate(test_candidates.iterrows()):
                                 with st.spinner(f"Generating for {row['ID']}..."):
                                     code = engine.generate_test_code(row['Requirement'])
                                     update_generated_code(row['ID'], code)
@@ -754,14 +765,15 @@ def render_mission_control():
                                     main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == row['ID']].index[0]
                                     st.session_state['requirements'].at[main_idx, 'Generated Code'] = code
                                 
-                                progress_bar.progress((i + 1) / len(missing_code))
+                                progress_bar.progress((i + 1) / len(test_candidates))
                             
                             st.success("Bulk Generation Complete!")
                             time.sleep(1)
                             st.rerun()
                 
-                # 2. Bulk Execute
-                ready_to_run = selected_rows[selected_rows['Generated Code'] != '']
+                # 2. Bulk Execute (Show for items with code)
+                # Robust check for non-empty code
+                ready_to_run = selected_rows[selected_rows['Generated Code'].fillna('').ne('')]
                 
                 if not ready_to_run.empty:
                     st.markdown(f"**Ready to Execute:** {len(ready_to_run)} items")
