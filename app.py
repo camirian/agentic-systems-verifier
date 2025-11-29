@@ -195,7 +195,25 @@ if 'requirements' not in st.session_state:
         st.session_state['requirements'] = pd.DataFrame(db_data)
     else:
         # Initialize with empty DataFrame
-        st.session_state['requirements'] = pd.DataFrame(columns=["ID", "Requirement Name", "Requirement", "Status", "Priority", "Source"])
+        st.session_state['requirements'] = pd.DataFrame(columns=[
+            "ID", "Requirement Name", "Requirement", "Status", "Priority", "Source", 
+            "Verification Method", "Rationale", "Generated Code", 
+            "Verification Status", "Execution Log", "Select"
+        ])
+
+    # Enforce Schema (Ensure all columns exist)
+    required_cols = [
+        "ID", "Requirement Name", "Requirement", "Status", "Priority", "Source", 
+        "Verification Method", "Rationale", "Generated Code", 
+        "Verification Status", "Execution Log", "Select"
+    ]
+    
+    for col in required_cols:
+        if col not in st.session_state['requirements'].columns:
+            if col == "Select":
+                st.session_state['requirements'][col] = False
+            else:
+                st.session_state['requirements'][col] = ""
 
 if 'system_logs' not in st.session_state:
     # Initial log if empty
