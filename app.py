@@ -345,6 +345,7 @@ def render_inspector():
         if rec.get('Verification Method') == 'Test':
             if st.button("⚡ Generate Test Script", key="gen_btn", type="primary"):
                 # Call engine
+                api_key = st.session_state.get('api_key')
                 if not api_key:
                      st.error("API Key required.")
                 else:
@@ -486,6 +487,7 @@ def render_mission_control():
                 default_key = ""
             
             api_key = st.text_input("Google API Key", value=default_key, type="password", help="Required for AI Extraction. Leave empty to use system default if configured.")
+            st.session_state['api_key'] = api_key
         
         # 2. Mission Setup (Grouped)
         # Auto-collapse if we are past the setup phase
