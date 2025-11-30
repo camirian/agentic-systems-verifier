@@ -602,6 +602,13 @@ def render_mission_control():
 
         # Apply Filters
         df_view = st.session_state['requirements'].copy()
+        
+        # --- Data Cleanup (Visuals) ---
+        # Replace 'N/A' in Name with snippet of text
+        if 'Requirement Name' in df_view.columns and 'Requirement' in df_view.columns:
+             df_view['Requirement Name'] = df_view['Requirement Name'].replace('N/A', df_view['Requirement'].str[:40] + '...')
+             df_view['Requirement Name'] = df_view['Requirement Name'].fillna(df_view['Requirement'].str[:40] + '...')
+
         if not df_view.empty:
             if filter_status:
                 df_view = df_view[df_view["Status"].isin(filter_status)]
@@ -699,25 +706,24 @@ def render_mission_control():
                     width="small", 
                     options=["Test", "Analysis", "Inspection", "Demonstration"],
                     required=True,
-                    help="Verification Method (T/A/I/D)"
+                    help="Verification Method"
                 ),
                 "Requirement Name": st.column_config.TextColumn("Name", width="medium", disabled=True),
                 "Requirement": st.column_config.TextColumn(
                     "Requirement", 
                     width="large", 
                     disabled=False,
-                    help="Double-click to edit or view full text in Inspector"
+                    help="Double-click to edit"
                 ),
                 "Rationale": st.column_config.TextColumn(
                     "AI Rationale", 
                     width="large", 
-                    disabled=True,
-                    help="Double-click to view full text in Inspector"
+                    disabled=True
                 ),
                 "Status": st.column_config.SelectboxColumn(
                     "Status", 
                     width="small", 
-                    options=["Pending", "Analyzed", "Verified", "Failed"],
+                    options=["Analyzed", "Pending", "Verified", "Failed"],
                     required=True
                 ),
                 "Priority": st.column_config.SelectboxColumn(
