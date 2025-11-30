@@ -721,7 +721,7 @@ def render_mission_control():
                 ),
                 "Source": st.column_config.TextColumn("Source", width="small", disabled=True)
             },
-            disabled=["ID", "Source", "Requirement Name", "Rationale"], # ID and Source are immutable, Name/Rationale are AI generated
+            disabled=["ID", "Source", "Requirement Name", "Rationale"],
             hide_index=True,
             key="data_editor"
         )
