@@ -1,122 +1,54 @@
 # Agentic Systems Verifier (ASV)
 
+[![CI](https://github.com/yourname/asv/actions/workflows/ci.yml/badge.svg)](https://github.com/yourname/asv/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://agentic-systems-verifier-2rhbgofjzidytbh7fxmqpw.streamlit.app/)
-[![Status](https://img.shields.io/badge/Status-Beta-blue)]()
-[![License](https://img.shields.io/badge/License-MIT-green)]()
-[![AI-Engine](https://img.shields.io/badge/AI-Gemini%20Pro-purple)]()
 
-## 🚀 [Try the Live Demo](https://agentic-systems-verifier-2rhbgofjzidytbh7fxmqpw.streamlit.app/)
+> **ASV automates the Systems Engineering V-Model using Agentic AI.**
 
-**The Autonomous Verification Engine for Safety-Critical Systems.**
+ASV transforms static PDF specifications into executable, verified code. It bridges the gap between the "Left V" (Requirements Decomposition) and the "Right V" (Verification & Validation) using a multi-agent architecture.
 
-ASV is not just a coding tool; it is a **Compliance Orchestrator**. It leverages Multi-Agent AI to automate the rigorous Systems Engineering V-Model, transforming static PDF specifications into executable, verified code.
+![Demo](docs/assets/demo.gif)
 
----
+## ⚡ Quick Start
 
-## 🏗️ The "Iron Wall" Architecture
-
-ASV solves the "AI Hallucination" problem in engineering through strict agent isolation:
-
-| Agent Persona     | Role                | Responsibility                                                                               |
-| :---------------- | :------------------ | :------------------------------------------------------------------------------------------- |
-| **The Architect** | 🔵 **Decomposition** | Ingests PDFs (NASA/DoD), extracts "Shall" statements, and creates the Architecture.          |
-| **The Planner**   | 🟡 **Analysis**      | Determines the Verification Method (Test vs. Inspection) and generates the Test Plan.        |
-| **The Builder**   | 🟢 **Execution**     | Writes the Python implementation (e.g., Buffer Managers, Protocol Parsers).                  |
-| **The Auditor**   | 🔴 **Verification**  | Runs the tests against the original Spec. **Rejects code** that violates safety constraints. |
-
----
-
-## 🚀 Enterprise Capabilities
-
-*   **Multimodal Ingestion:** Uses **Gemini Pro** to read complex engineering diagrams and tables, not just text.
-*   **Multi-Project Management:** Switch instantly between NASA, DoD, and ESA specifications using the **Global Project Selector**.
-*   **On-Demand Code Generation:** Click "Generate Test Case" to watch the AI write `pytest` verification scripts in real-time.
-*   **Smart Context Filtering:** Proprietary local-scan algorithms reduce token usage by 95% by only sending relevant specification sections to the cloud.
-*   **Audit-Grade Traceability:** Every line of generated code is linked to a Requirement ID (`BPv6-001`). If the requirement changes, the code is flagged for review.
-*   **Surgical Verification:** Verify a single requirement in 5 seconds, or the entire 200-page specification in 5 minutes.
-
----
-
-## 📂 Project Structure
-
-```text
-agentic-systems-verifier/
-├── app.py               # The Main Streamlit Application (Mission Control)
-├── core/                # The V-Model Engines
-│   ├── db.py            # SQLite Database & Persistence Layer
-│   ├── ingestion.py     # PDF Parsing & Requirement Extraction (Decomposition)
-│   └── verification_engine.py # AI Verification Logic (Verification)
-├── data/                # Local storage for uploaded specs
-├── docs/                # User Manuals & Artifacts
-└── tests/               # Validation suite
-```
-
----
-
-## 🛠️ Quick Start
-
-### 1. Installation
-Ensure you have Python 3.10+ installed.
+Get the platform running locally in minutes:
 
 ```bash
-cd ~/dev/personal/agentic-systems-verifier
+# 1. Clone the repository
+git clone https://github.com/yourname/asv.git
+cd asv
+
+# 2. Install dependencies
 pip install -r requirements.txt
-```
 
-### 2. Launch Mission Control
-Start the local web interface:
-
-```bash
+# 3. Run the application
 streamlit run app.py
 ```
-The app will open at `http://localhost:8501`.
 
----
+## 🏗️ Architecture
 
-## ☁️ Deployment
+ASV solves the "AI Hallucination" problem in engineering through strict agent isolation (The "Iron Wall"):
 
-### Option 1: Streamlit Community Cloud (Recommended for Demos)
-1.  Push this repository to GitHub.
-2.  Go to [share.streamlit.io](https://share.streamlit.io).
-3.  Select your repo and deploy `app.py`.
-4.  **Secrets:** Add your `GOOGLE_API_KEY` in the Streamlit "Secrets" settings.
+*   **The Architect (Decomposition):** Ingests PDFs, extracts "Shall" statements.
+*   **The Planner (Analysis):** Determines Verification Methods (Test, Analysis, Inspection).
+*   **The Builder (Execution):** Generates Python `pytest` scripts.
+*   **The Auditor (Verification):** Runs tests and rejects code that violates safety constraints.
 
-### Option 2: Google Cloud Run (Enterprise/Grant)
-This project includes a production-ready `Dockerfile`.
-1.  Install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install).
-2.  Run: `gcloud run deploy agentic-verifier --source .`
-3.  The app will scale automatically and run in a secure container.
+## 🚀 Key Features
 
----
+*   **Multimodal Ingestion:** Powered by Gemini Pro to understand complex engineering specs.
+*   **Traceability Matrix:** Real-time dashboard tracking every requirement from PDF to Code.
+*   **Auto-Code Generation:** One-click generation of verification scripts.
+*   **CI/CD Ready:** Includes standard GitHub Actions workflows.
 
-## 💠 The V-Model Workflow
+## 🤝 Contributing
 
-ASV guides you through a formal 3-phase Systems Engineering process:
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to set up your development environment and submit Pull Requests.
 
-### Phase 1: Decomposition (Left-V)
-*   **Input:** Upload a raw PDF specification (e.g., NASA BPSec Protocol).
-*   **Action:** Click **"Initialize Agents"**.
-*   **Result:** The system ingests the document, extracts atomic requirements, and populates the "Pending" RTM.
-
-### Phase 2: Verification (Test)
-*   **Input:** Select a specific requirement or target the whole section.
-*   **Action:** Click **"Generate Verification Plan"**.
-*   **Result:** The **Verification Engine** analyzes the requirement using Gemini, determining the verification method (Test, Analysis, Inspection).
-
-### Phase 3: Traceability (Right-V)
-*   **Input:** Review the RTM.
-*   **Action:** Check the **"Planning Dashboard"** for metrics.
-*   **Result:** A fully traceable compliance report with "Analyzed" status and AI-generated rationale.
-
----
-
-## 🔮 Roadmap
-
-*   **Q4 2025:** Support for European Space Agency (ESA) ECSS standards.
-*   **Q1 2026:** Integration with SysML v2 API for model-based verification.
-*   **Q2 2026:** "Hardware-in-the-Loop" simulation via Omniverse connectors.
-*   **DONE:** LLM-driven "Spec-to-Config" compiler (Automated Ingestion).
+Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.
 
 ## 📜 License
 
-MIT License - Created by Antigravity
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
