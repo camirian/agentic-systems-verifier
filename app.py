@@ -787,6 +787,14 @@ def render_mission_control():
             mod_count = 0
         # -----------------------------------------------
 
+        # -----------------------------------------------
+
+        # Define selected_rows for debug info
+        if 'Select' in st.session_state['requirements'].columns:
+            selected_rows = st.session_state['requirements'][st.session_state['requirements']['Select'] == True]
+        else:
+            selected_rows = pd.DataFrame()
+
         with st.expander("🐞 Debug & System Info", expanded=False):
             st.caption(f"App Version: {datetime.datetime.now().strftime('%H:%M:%S')}")
             st.write("Selection Count:", len(selected_rows))
