@@ -681,10 +681,12 @@ def render_mission_control():
         df_view = df_view[cols_to_show]
         
         # We use st.data_editor
-            key="data_editor",
-            # on_select="rerun", # Not supported in installed version
-            # selection_mode="multi-row"
-        )
+        edited_df = st.data_editor(
+            df_view,
+            use_container_width=True,
+            height=850,
+            on_change=handle_selection_change,
+            column_config={
                 "Select": st.column_config.CheckboxColumn("Select", width="small"),
                 "ID": st.column_config.TextColumn("ID", width="small", disabled=True),
                 "Verification Method": st.column_config.SelectboxColumn(
