@@ -4,11 +4,20 @@ import json
 import os
 import time
 import concurrent.futures
+from typing import List, Dict, Any, Tuple, Optional, Callable
 from core.db import log_event
 
-def process_batch(batch_index, batch_text, model):
+def process_batch(batch_index: int, batch_text: str, model: genai.GenerativeModel) -> List[Dict[str, Any]]:
     """
-    Helper function to process a single batch of text.
+    Helper function to process a single batch of text using the AI model.
+
+    Args:
+        batch_index (int): The index of the current batch.
+        batch_text (str): The text content of the batch.
+        model (genai.GenerativeModel): The configured Gemini model instance.
+
+    Returns:
+        List[Dict[str, Any]]: A list of extracted requirements as dictionaries.
     """
     try:
         prompt = f"""
@@ -36,12 +45,19 @@ def process_batch(batch_index, batch_text, model):
         response = model.generate_content(prompt)
         return json.loads(response.text)
     except Exception as e:
-        print(f"Error processing batch {batch_index + 1}: {e}")
+        log_event(f"Error processing batch {batch_index + 1}: {e}", level="ERROR")
         return []
 
-def extract_doc_title(first_pages_text, model):
+def extract_doc_title(first_pages_text: str, model: genai.GenerativeModel) -> str:
     """
     Extracts the official document title from the first few pages.
+
+    Args:
+        first_pages_text (str): Text content from the beginning of the document.
+        model (genai.GenerativeModel): The configured Gemini model instance.
+
+    Returns:
+        str: The extracted document title, or "Untitled Specification" if not found.
     """
     try:
         prompt = f"""
@@ -57,42 +73,26 @@ def extract_doc_title(first_pages_text, model):
         response = model.generate_content(prompt)
         return response.text.strip()
     except Exception as e:
-        print(f"Error extracting title: {e}")
+        log_event(f"Error extracting title: {e}", level="ERROR")
         return "Untitled Specification"
 
-def extract_doc_title(first_pages_text, model):
-    """
-    Extracts the official document title from the first few pages.
-    """
-    try:
-        prompt = f"""
-        Read the following text (from the first few pages of a document).
-        Identify the OFFICIAL TITLE of the document.
-        
-        Return ONLY the title as a string. Do not add quotes or markdown.
-        If you cannot find a clear title, return "Untitled Specification".
-        
-        TEXT:
-        {first_pages_text[:5000]}
-        """
-        response = model.generate_content(prompt)
-        return response.text.strip()
-    except Exception as e:
-        print(f"Error extracting title: {e}")
-        return "Untitled Specification"
-
-def extract_requirements_from_pdf(file_path, api_key, target_section=None, progress_callback=None):
+def extract_requirements_from_pdf(
+    file_path: str, 
+    api_key: str, 
+    target_section: Optional[str] = None, 
+    progress_callback: Optional[Callable[[float, str], None]] = None
+) -> Tuple[List[Dict[str, Any]], str]:
     """
     Extracts requirements from a PDF file using Gemini AI with Smart Page Filtering.
     
     Args:
         file_path (str): Path to the PDF file.
         api_key (str): Google API Key.
-        target_section (str, optional): Specific section to filter by.
-        progress_callback (callable, optional): Function to call with progress (0.0 to 1.0) and status text.
+        target_section (Optional[str]): Specific section to filter by.
+        progress_callback (Optional[Callable[[float, str], None]]): Function to call with progress (0.0 to 1.0) and status text.
         
     Returns:
-        list: A list of dictionaries containing requirement details.
+        Tuple[List[Dict[str, Any]], str]: A tuple containing a list of requirement dictionaries and the document title.
     """
     requirements = []
     

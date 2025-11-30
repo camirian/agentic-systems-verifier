@@ -1,17 +1,32 @@
 import google.generativeai as genai
 import json
 import time
+from typing import Dict, Any, Generator, List, Optional
 from core.db import get_requirements, update_verification_result, log_event
 
 class VerificationEngine:
-    def __init__(self, api_key):
+    def __init__(self, api_key: str):
+        """
+        Initializes the Verification Engine with the Google Gemini API.
+
+        Args:
+            api_key (str): The Google API Key for authentication.
+        """
         self.api_key = api_key
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel('gemini-flash-latest',
                                       generation_config={"response_mime_type": "application/json"})
 
-    def _analyze_requirement(self, req):
-        """Helper to analyze a single requirement dict."""
+    def _analyze_requirement(self, req: Dict[str, Any]) -> str:
+        """
+        Helper to analyze a single requirement dict using AI.
+
+        Args:
+            req (Dict[str, Any]): The requirement dictionary containing 'ID' and 'Requirement'.
+
+        Returns:
+            str: A log message describing the analysis result.
+        """
         req_id = req['ID']
         text = req['Requirement']
         
@@ -70,10 +85,15 @@ class VerificationEngine:
         
         return error_msg
 
-    def verify_section(self, section_id=None):
+    def verify_section(self, section_id: Optional[str] = None) -> Generator[str, None, None]:
         """
         Analyzes all pending requirements in a section (or all if section_id is None).
-        Yields log messages for the UI.
+
+        Args:
+            section_id (Optional[str]): The specific section to verify. If None, verifies all sections.
+
+        Yields:
+            str: Log messages for the UI.
         """
         requirements = get_requirements(section_id)
         pending_reqs = [r for r in requirements if r['Status'] == 'Pending']
@@ -99,10 +119,15 @@ class VerificationEngine:
         log_event(f"Verification complete for {scope_name}.")
         yield "Verification complete."
 
-    def verify_single_requirement(self, req_id):
+    def verify_single_requirement(self, req_id: str) -> Generator[str, None, None]:
         """
         Analyzes a specific requirement by ID.
-        Yields log messages.
+
+        Args:
+            req_id (str): The ID of the requirement to verify.
+
+        Yields:
+            str: Log messages for the UI.
         """
         from core.db import get_requirement_by_id
         req = get_requirement_by_id(req_id)
@@ -119,9 +144,15 @@ class VerificationEngine:
         yield log_msg
         yield "Verification complete."
 
-    def generate_test_code(self, requirement_text):
+    def generate_test_code(self, requirement_text: str) -> str:
         """
         Generates Python pytest code for a given requirement.
+
+        Args:
+            requirement_text (str): The text of the requirement to generate tests for.
+
+        Returns:
+            str: The generated Python code as a string.
         """
         prompt = f"""
         You are a Senior Python Test Engineer for NASA software.
@@ -148,10 +179,15 @@ class VerificationEngine:
             log_event(f"Code generation failed: {str(e)}", level="ERROR")
             return f"# Error generating code: {str(e)}"
 
-    def execute_test_code(self, code_str):
+    def execute_test_code(self, code_str: str) -> Dict[str, str]:
         """
         Executes the generated test code using pytest in a subprocess.
-        Returns a dict: {'status': 'Pass'|'Fail'|'Error', 'log': str}
+
+        Args:
+            code_str (str): The Python code to execute.
+
+        Returns:
+            Dict[str, str]: A dictionary containing 'status' ('Pass'|'Fail'|'Error') and 'log' (str).
         """
         import subprocess
         import os
