@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 # from xhtml2pdf import pisa
@@ -606,7 +607,11 @@ def render_mission_control():
         # --- Data Cleanup (Visuals) ---
         # Replace 'N/A' in Name with snippet of text
         if 'Requirement Name' in df_view.columns and 'Requirement' in df_view.columns:
-             df_view['Requirement Name'] = df_view['Requirement Name'].replace('N/A', df_view['Requirement'].str[:40] + '...')
+             df_view['Requirement Name'] = np.where(
+                 df_view['Requirement Name'] == 'N/A', 
+                 df_view['Requirement'].str[:40] + "...", 
+                 df_view['Requirement Name']
+             )
              df_view['Requirement Name'] = df_view['Requirement Name'].fillna(df_view['Requirement'].str[:40] + '...')
 
         if not df_view.empty:
