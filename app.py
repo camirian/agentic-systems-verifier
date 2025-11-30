@@ -294,48 +294,23 @@ def render_documentation():
 def render_inspector():
     """Renders the High-Density Inspector in the Sidebar."""
     # 1. Get Selection
-    # Use the key 'data_editor' which we set in st.data_editor
-    selection = st.session_state.get('data_editor', {}).get('selection', {'rows': []})
+    # Use the 'Select' column from session state
+    df = st.session_state['requirements']
     
-    if not selection or len(selection['rows']) == 0:
+    # Check if 'Select' column exists and find selected rows
+    if 'Select' in df.columns:
+        selected_rows = df[df['Select'] == True]
+    else:
+        selected_rows = pd.DataFrame()
+    
+    if selected_rows.empty:
         st.sidebar.info("👈 Select a requirement from the table to inspect details.")
         return
 
     # 2. Get Data
-    row_idx = selection['rows'][0]
-    df = st.session_state['requirements']
-    # Handle filtered dataframe indices safely
-    # Note: st.data_editor returns indices relative to the displayed dataframe.
-    # If df_view is filtered, row_idx refers to df_view.iloc[row_idx].
-    # We need to ensure we are accessing the correct row in the main DF.
-    # However, st.data_editor operates on the dataframe passed to it.
-    # If we passed df_view, then row_idx is correct for df_view.
-    # But we need to map it back to the main DF if we want to update DB/Session.
-    # Let's assume df_view is what we are looking at.
-    
-    # We need to access df_view from session state or re-derive it?
-    # Actually, st.data_editor output 'edited_df' is the displayed DF.
-    # But we can't easily access 'edited_df' here unless we pass it or store it.
-    # Let's try to access st.session_state['requirements'] directly if no filter, 
-    # OR we need to know the current view.
-    # For now, let's assume row_idx maps to st.session_state['requirements'] IF no filter.
-    # BUT if there is a filter, this will be wrong.
-    # FIX: We should probably store the 'view' in session state or re-apply filters?
-    # Or, simpler: Use the ID from the selected row in the view to find the record.
-    # But we don't have the view here.
-    # Let's try to get the record from the main DF using iloc if possible, 
-    # but strictly speaking we should use the ID.
-    # The user's snippet uses: df.iloc[row_idx].
-    # I will stick to that for now, but I'll add a safety check.
-    
-    try:
-        # We need the dataframe that is currently displayed to map the index.
-        # Since we don't have it globally, we might default to st.session_state['requirements']
-        # This is a known limitation of this snippet if filters are active.
-        # I will try to use the ID if I can find it.
-        rec = df.iloc[row_idx]
-    except:
-        return # Safety catch if index shifts
+    # Use the first selected row
+    rec = selected_rows.iloc[0]
+
 
     # 3. Create Tabs
     st.sidebar.markdown("---")
@@ -706,12 +681,10 @@ def render_mission_control():
         df_view = df_view[cols_to_show]
         
         # We use st.data_editor
-        edited_df = st.data_editor(
-            df_view,
-            use_container_width=True,
-            height=850,
-            on_change=handle_selection_change,
-            column_config={
+            key="data_editor",
+            # on_select="rerun", # Not supported in installed version
+            # selection_mode="multi-row"
+        )
                 "Select": st.column_config.CheckboxColumn("Select", width="small"),
                 "ID": st.column_config.TextColumn("ID", width="small", disabled=True),
                 "Verification Method": st.column_config.SelectboxColumn(
@@ -750,9 +723,7 @@ def render_mission_control():
             },
             disabled=["ID", "Source", "Requirement Name", "Rationale"], # ID and Source are immutable, Name/Rationale are AI generated
             hide_index=True,
-            key="data_editor",
-            on_select="rerun",
-            selection_mode="multi-row"
+            key="data_editor"
         )
         
         # --- Audit Trail Logic (Change Detection) ---
