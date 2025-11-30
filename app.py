@@ -318,7 +318,7 @@ def render_inspector():
 
     # 3. Create Tabs
     st.sidebar.markdown("---")
-    tab_details, tab_edit = st.sidebar.tabs(["📄 Details", "🛠️ Edit"])
+    tab_details, tab_execute, tab_edit = st.sidebar.tabs(["📄 Details", "⚡ Execute", "🛠️ Edit"])
 
     # --- TAB 1: DETAILS (Read Only) ---
     with tab_details:
@@ -339,6 +339,110 @@ def render_inspector():
         
         st.caption("AI Rationale")
         st.markdown(f"> *{rec.get('Rationale', 'No rationale provided.')}*")
+
+    # --- TAB 2: EXECUTE (Code Gen) ---
+    with tab_execute:
+        st.subheader("Agent Execution")
+        if rec.get('Verification Method') == 'Test':
+            # Check if code already exists
+            existing_code = rec.get('Generated Code')
+            
+            if existing_code:
+                st.success("✅ Code Generated")
+                st.code(existing_code, language="python")
+                st.download_button("📥 Download .py", existing_code, f"test_{rec['ID']}.py")
+                
+                if st.button("🔄 Regenerate Code", type="secondary"):
+                    # Call engine
+                    api_key = st.session_state.get('api_key')
+                    if not api_key:
+                         st.error("API Key required.")
+                    else:
+                        with st.spinner("Regenerating code..."):
+                            engine = VerificationEngine(api_key)
+                            code = engine.generate_test_code(rec['Requirement'])
+                            # Save to DB
+                            update_generated_code(rec['ID'], code)
+                            
+                            # Update Session
+                            main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == rec['ID']].index[0]
+                            st.session_state['requirements'].at[main_idx, 'Generated Code'] = code
+                            
+                            st.rerun()
+            else:
+                # No code yet
+                if st.button("⚡ Generate Test Script", key="gen_btn_sidebar", type="primary"):
+                    # Call engine
+                    api_key = st.session_state.get('api_key')
+                    if not api_key:
+                         st.error("API Key required.")
+                    else:
+                        with st.spinner("Writing code..."):
+                            engine = VerificationEngine(api_key)
+                            code = engine.generate_test_code(rec['Requirement'])
+                            # Save to DB
+                            update_generated_code(rec['ID'], code)
+                            
+                            # Update Session
+                            main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == rec['ID']].index[0]
+                            st.session_state['requirements'].at[main_idx, 'Generated Code'] = code
+                            
+                            st.success("Code Generated!")
+                            st.rerun()
+        else:
+            st.info("This requirement is classified as Inspection/Analysis. No code generation required.")
+
+    # --- TAB 2: EXECUTE (Code Gen) ---
+    with tab_execute:
+        st.subheader("Agent Execution")
+        if rec.get('Verification Method') == 'Test':
+            # Check if code already exists
+            existing_code = rec.get('Generated Code')
+            
+            if existing_code:
+                st.success("✅ Code Generated")
+                st.code(existing_code, language="python")
+                st.download_button("📥 Download .py", existing_code, f"test_{rec['ID']}.py")
+                
+                if st.button("🔄 Regenerate Code", type="secondary"):
+                    # Call engine
+                    api_key = st.session_state.get('api_key')
+                    if not api_key:
+                         st.error("API Key required.")
+                    else:
+                        with st.spinner("Regenerating code..."):
+                            engine = VerificationEngine(api_key)
+                            code = engine.generate_test_code(rec['Requirement'])
+                            # Save to DB
+                            update_generated_code(rec['ID'], code)
+                            
+                            # Update Session
+                            main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == rec['ID']].index[0]
+                            st.session_state['requirements'].at[main_idx, 'Generated Code'] = code
+                            
+                            st.rerun()
+            else:
+                # No code yet
+                if st.button("⚡ Generate Test Script", key="gen_btn_sidebar", type="primary"):
+                    # Call engine
+                    api_key = st.session_state.get('api_key')
+                    if not api_key:
+                         st.error("API Key required.")
+                    else:
+                        with st.spinner("Writing code..."):
+                            engine = VerificationEngine(api_key)
+                            code = engine.generate_test_code(rec['Requirement'])
+                            # Save to DB
+                            update_generated_code(rec['ID'], code)
+                            
+                            # Update Session
+                            main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == rec['ID']].index[0]
+                            st.session_state['requirements'].at[main_idx, 'Generated Code'] = code
+                            
+                            st.success("Code Generated!")
+                            st.rerun()
+        else:
+            st.info("This requirement is classified as Inspection/Analysis. No code generation required.")
 
     # --- TAB 2: EDIT (Manual Override) ---
     with tab_edit:
@@ -534,7 +638,7 @@ def render_mission_control():
     st.title("ASV: Agentic Systems Verifier")
 
     # Tabs
-    tab_trace, tab_code_view, tab_cortex, tab_report = st.tabs(["📋 Requirements Trace", "🐍 Code Artifacts", "🧠 Agent Cortex", "✅ Verification Report"])
+    tab_trace, tab_cortex, tab_report = st.tabs(["📋 Requirements Trace", "🧠 Agent Cortex", "✅ Verification Report"])
 
     with tab_trace:
         st.subheader("Requirements Traceability Matrix")
@@ -759,6 +863,51 @@ def render_mission_control():
                     st.toast(f"Requirement {req_id} updated & Audit Trail logged", icon="✏️")
                     st.rerun()
         
+        # --- BULK ACTION BAR ---
+        # Check for selected rows
+        if 'Select' in st.session_state['requirements'].columns:
+            selected_rows = st.session_state['requirements'][st.session_state['requirements']['Select'] == True]
+            sel_count = len(selected_rows)
+            
+            if sel_count > 1:
+                st.markdown(f"""
+                <div style="background-color: #2E3440; padding: 15px; border-radius: 5px; border: 1px solid #4C566A; margin-top: 10px; display: flex; align-items: center; justify-content: space-between;">
+                    <span style="font-weight: bold; color: #ECEFF4;">⚡ Bulk Actions ({sel_count} items selected)</span>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if st.button(f"⚡ Generate Code for {sel_count} Items", type="primary", use_container_width=True):
+                    api_key = st.session_state.get('api_key')
+                    if not api_key:
+                        st.error("API Key required for code generation.")
+                    else:
+                        progress_bar = st.progress(0, text="Starting Batch Generation...")
+                        engine = VerificationEngine(api_key)
+                        
+                        success_count = 0
+                        for i, (index, row) in enumerate(selected_rows.iterrows()):
+                            if row.get('Verification Method') == 'Test':
+                                try:
+                                    code = engine.generate_test_code(row['Requirement'])
+                                    update_generated_code(row['ID'], code)
+                                    
+                                    # Update Session
+                                    main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == row['ID']].index[0]
+                                    st.session_state['requirements'].at[main_idx, 'Generated Code'] = code
+                                    success_count += 1
+                                except Exception as e:
+                                    log_event(f"Failed to generate code for {row['ID']}: {e}", level="ERROR")
+                            
+                            # Update Progress
+                            progress = (i + 1) / sel_count
+                            progress_bar.progress(progress, text=f"Processing {row['ID']}...")
+                        
+                        progress_bar.progress(100, text="Batch Complete!")
+                        st.success(f"Generated code for {success_count} requirements!")
+                        st.toast(f"Batch Complete: {success_count} Generated", icon="✅")
+                        time.sleep(1)
+                        st.rerun()
+
         # --- Inspector Logic (Sidebar) ---
         # Call the new Inspector function
         render_inspector()
@@ -799,50 +948,6 @@ def render_mission_control():
                         modified_rows.style.apply(lambda x: ['background-color: #332b00'] * len(x), axis=1),
                         use_container_width=True
                     )
-
-    with tab_code_view:
-        st.subheader("🐍 Code Artifacts")
-        
-        # Get Selection
-        df = st.session_state.get('requirements', pd.DataFrame())
-        selected_rows = pd.DataFrame()
-        if 'Select' in df.columns:
-            selected_rows = df[df['Select'] == True]
-            
-        if selected_rows.empty:
-            st.info("👈 Select a 'Test' requirement from the Matrix to generate code.")
-        else:
-            rec = selected_rows.iloc[0]
-            st.markdown(f"### {rec['ID']}: {rec['Requirement Name']}")
-            st.info(rec['Requirement'])
-            
-            if rec.get('Verification Method') == 'Test':
-                st.markdown("#### Agent Execution")
-                if st.button("⚡ Generate Test Script", key="gen_btn_main", type="primary"):
-                    # Call engine
-                    api_key = st.session_state.get('api_key')
-                    if not api_key:
-                         st.error("API Key required.")
-                    else:
-                        with st.spinner("Writing code..."):
-                            engine = VerificationEngine(api_key)
-                            code = engine.generate_test_code(rec['Requirement'])
-                            # Save to DB
-                            update_generated_code(rec['ID'], code)
-                            
-                            # Update Session
-                            main_idx = st.session_state['requirements'][st.session_state['requirements']['ID'] == rec['ID']].index[0]
-                            st.session_state['requirements'].at[main_idx, 'Generated Code'] = code
-                            
-                            st.success("Code Generated!")
-                            st.rerun()
-                
-                # Show existing code
-                if rec.get('Generated Code'):
-                    st.code(rec['Generated Code'], language="python", line_numbers=True)
-                    st.download_button("📥 Download .py", rec['Generated Code'], f"test_{rec['ID']}.py")
-            else:
-                st.info("This requirement is classified as Inspection/Analysis. No code generation required.")
 
     with tab_cortex:
         # --- HUD Legend ---
