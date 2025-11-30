@@ -304,7 +304,10 @@ def render_inspector():
         selected_rows = pd.DataFrame()
     
     if selected_rows.empty:
-        st.sidebar.info("👈 Select a requirement from the table to inspect details.")
+        st.sidebar.info(
+            "Select a requirement row from the matrix to view details, generate code, or audit metadata.",
+            icon="ℹ️"
+        )
         return
 
     # 2. Get Data
