@@ -998,7 +998,7 @@ def render_mission_control():
 
         else:
             # START BUTTON
-            if st.button("▶️ Generate Verification Plan (All)", use_container_width=True, type="primary"):
+            if st.button("▶️ Generate Verification Plan (All)", use_container_width=False, type="primary"):
                 if not api_key:
                     st.error("API Key required for verification.")
                 else:
