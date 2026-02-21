@@ -292,6 +292,12 @@ def render_documentation():
     else:
         st.error(f"File not found: {file_path}")
 
+@st.dialog("🐍 Generated Test Code", width="large")
+def view_code_dialog(code, req_id):
+    st.markdown(f"**Requirement ID:** `{req_id}`")
+    st.code(code, language="python", line_numbers=True)
+    st.download_button("📥 Download .py", code, f"test_{req_id}.py")
+
 def render_inspector():
     """Renders the High-Density Inspector in the Sidebar."""
     # 1. Get Selection
