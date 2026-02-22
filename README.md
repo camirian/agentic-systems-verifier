@@ -1,6 +1,6 @@
 # Agentic Systems Verifier (ASV)
 
-[![CI](https://github.com/yourname/asv/actions/workflows/ci.yml/badge.svg)](https://github.com/yourname/asv/actions/workflows/ci.yml)
+[![CI](https://github.com/camirian/agentic-systems-verifier/actions/workflows/pytest.yml/badge.svg)](https://github.com/camirian/agentic-systems-verifier/actions/workflows/pytest.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://agentic-systems-verifier-2rhbgofjzidytbh7fxmqpw.streamlit.app/)
@@ -9,7 +9,13 @@
 
 ASV transforms static PDF specifications into executable, verified code. It bridges the gap between the "Left V" (Requirements Decomposition) and the "Right V" (Verification & Validation) using a multi-agent architecture.
 
-![Demo](docs/assets/demo.gif)
+## 🎬 Live Demo
+
+[![Watch the Demo on YouTube](https://img.shields.io/badge/▶%20Watch%20Demo-YouTube-red?style=for-the-badge&logo=youtube)](https://youtu.be/zYuLUAMb0So)
+
+> A live 22-second screen capture showing the full Pytest execution suite — including **Gemini Pro API connectivity validation** and **NASA HDTN buffer manager verification gates** — completing with 100% pass rate.
+
+---
 
 ## ⚡ Quick Start
 
@@ -17,7 +23,7 @@ Get the platform running locally in minutes:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourname/asv.git
+git clone https://github.com/camirian/agentic-systems-verifier.git
 cd asv
 
 # 2. Install dependencies
