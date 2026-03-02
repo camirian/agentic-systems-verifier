@@ -1,0 +1,38 @@
+# Frontend Dockerfile for Next.js on Cloud Run
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY web/package.json web/package-lock.json ./
+
+# Install deps
+RUN npm ci
+
+# Copy source
+COPY web/ ./
+
+# Accept backend URL as build arg
+ARG NEXT_PUBLIC_API_BASE
+ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE
+
+# Build
+RUN npm run build
+
+# Production stage
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Copy built app
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]
