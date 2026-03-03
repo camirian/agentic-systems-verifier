@@ -677,11 +677,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* RIGHT PANEL: Agent Cortex Inspector */}
+      {/* RIGHT PANEL: Requirement Inspector */}
       <section className="inspector-panel glass-panel" style={{ overflowY: 'auto' }}>
-        <div style={{ padding: '1.25rem', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--secondary)' }}>
-          <h3 style={{ fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FileSearch size={18} color="var(--primary)" /> Inspector
+        <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--secondary)' }}>
+          <h3 style={{ fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#c9d1d9' }}>
+            <FileSearch size={18} color="var(--primary)" /> Requirement Inspector
           </h3>
         </div>
 
@@ -691,130 +691,207 @@ export default function Home() {
               <>
                 <Upload size={32} style={{ opacity: 0.5 }} />
                 <h4 style={{ color: 'white', fontSize: '1.1rem' }}>Welcome to ASV</h4>
-                <p style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>Upload a PDF specification using the <strong style={{ color: 'var(--primary)' }}>Upload First PDF</strong> button on the left to get started. The AI will extract all testable requirements automatically.</p>
+                <p style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>Upload a PDF specification using the <strong style={{ color: 'var(--primary)' }}>Upload PDF</strong> button to get started. The AI will extract all testable requirements automatically.</p>
               </>
             ) : (
               <>
                 <Sparkles size={32} style={{ opacity: 0.5 }} />
-                <h4 style={{ color: 'white', fontSize: '1.1rem' }}>Requirement Inspector</h4>
-                <p style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>Click on any requirement row in the table to inspect its details, brainstorm a verification strategy, or generate test code.</p>
+                <h4 style={{ color: 'white', fontSize: '1.1rem' }}>Select a Requirement</h4>
+                <p style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>Click on any requirement row in the table to inspect its verification details and execute the 3-step process.</p>
+                <div style={{ textAlign: 'left', padding: '1rem', backgroundColor: 'rgba(88, 166, 255, 0.05)', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.85rem', lineHeight: 1.8, width: '100%', maxWidth: '320px' }}>
+                  <strong style={{ color: 'white', display: 'block', marginBottom: '0.5rem' }}>Verification Pipeline</strong>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span style={{ background: 'var(--primary)', color: 'white', borderRadius: '50%', width: '18px', height: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, flexShrink: 0 }}>1</span> AI determines verification method</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span style={{ background: 'var(--primary)', color: 'white', borderRadius: '50%', width: '18px', height: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, flexShrink: 0 }}>2</span> AI generates pytest script</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span style={{ background: 'var(--primary)', color: 'white', borderRadius: '50%', width: '18px', height: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, flexShrink: 0 }}>3</span> Execute test & verify compliance</div>
+                </div>
               </>
             )}
           </div>
         ) : (
-          <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
-            {/* Meta */}
+            {/* ── HEADER: Requirement Identity ── */}
             <div>
-              <div style={{ fontSize: '0.85rem', color: '#8b949e', marginBottom: '0.25rem' }}>{selectedReq.id}</div>
-              <h4 style={{ fontSize: '1.2rem', fontWeight: 600, color: 'white', marginBottom: '1rem' }}>
-                {selectedReq.req_name || 'System Requirement'}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                <span className="badge analyzed" style={{ fontSize: '0.8rem', fontWeight: 700 }}>{selectedReq.id}</span>
+                {selectedReq.verification_method && (
+                  <span className={`badge ${selectedReq.verification_method.toLowerCase() === 'test' ? 'verified' : 'pending'}`} style={{ fontSize: '0.75rem' }}>
+                    {selectedReq.verification_method}
+                  </span>
+                )}
+                {selectedReq.verification_status === 'Pass' && (
+                  <span className="badge verified" style={{ fontSize: '0.75rem' }}>✓ Verified</span>
+                )}
+              </div>
+              <h4 style={{ fontSize: '1.15rem', fontWeight: 600, color: 'white', marginBottom: '0.75rem', lineHeight: 1.3 }}>
+                {selectedReq.req_name || 'Untitled Requirement'}
               </h4>
-              <div style={{ padding: '1rem', backgroundColor: 'rgba(88, 166, 255, 0.05)', borderLeft: '3px solid var(--primary)', borderRadius: '0 4px 4px 0' }}>
+              <div style={{ padding: '0.85rem 1rem', backgroundColor: 'rgba(88, 166, 255, 0.05)', borderLeft: '3px solid var(--primary)', borderRadius: '0 6px 6px 0', fontSize: '0.9rem', lineHeight: 1.6, color: '#c9d1d9' }}>
                 {selectedReq.text}
               </div>
             </div>
 
-            {/* AI Rationale */}
-            {selectedReq.rationale && (
-              <div>
-                <h5 style={{ fontSize: '0.85rem', color: '#8b949e', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>AI Rationale</h5>
-                <p style={{ fontSize: '0.95rem', fontStyle: 'italic', color: '#c9d1d9' }}>"{selectedReq.rationale}"</p>
-              </div>
-            )}
+            <hr style={{ borderColor: 'var(--border)', margin: '0.25rem 0' }} />
 
-            <hr style={{ borderColor: 'var(--border)' }} />
-
-            {/* Agent Execution */}
+            {/* ── STEP 1: AI Verification Strategy ── */}
             <div>
-              <h5 style={{ fontSize: '0.85rem', color: '#8b949e', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1rem' }}>
-                Verification Execution
-              </h5>
+              <div className={`step-label ${selectedReq.status !== 'Pending' ? 'completed' : ''}`}>
+                <span className="step-number">1</span>
+                AI Verification Strategy
+              </div>
+              <p className="step-description">
+                The AI reads the requirement text and determines the optimal verification method: <strong>Test</strong> (automated pytest), <strong>Analysis</strong> (mathematical/design review), or <strong>Inspection</strong> (manual document check).
+              </p>
 
               {selectedReq.status === 'Pending' ? (
                 <div>
-                  <div style={{ padding: '1rem', backgroundColor: 'rgba(23, 33, 43, 0.5)', border: '1px solid var(--border)', borderRadius: '6px', marginBottom: '1rem' }}>
-                    <p style={{ fontSize: '0.85rem', color: '#8b949e', lineHeight: 1.5 }}>
-                      <strong>What does this button do?</strong><br />
-                      The AI will read this exact requirement text and determine if it should be verified via Test, Analysis, or Inspection. If it is a Test, the AI will automatically generate the corresponding Pytest script for you.
-                    </p>
-                  </div>
                   <button
                     className="premium-btn"
                     onClick={handleAnalyze}
                     disabled={isAnalyzing}
-                    style={{ justifyContent: 'center', width: '100%', padding: '1rem', fontSize: '1.05rem' }}
+                    style={{ justifyContent: 'center', width: '100%', padding: '0.85rem', fontSize: '0.95rem' }}
                   >
-                    {isAnalyzing ? <RefreshCw className="spin" size={20} /> : <span style={{ fontSize: '1.2rem' }}>✨</span>}
-                    {isAnalyzing ? 'Brainstorming...' : 'Brainstorm Verification Strategy'}
+                    {isAnalyzing ? <RefreshCw className="spin" size={18} /> : <span style={{ fontSize: '1.1rem' }}>✨</span>}
+                    {isAnalyzing ? 'Analyzing Requirement...' : 'Run AI Analysis'}
                   </button>
                 </div>
-              ) : selectedReq.verification_method?.toLowerCase() === 'test' ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              ) : (
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                    <strong style={{ color: 'white', fontSize: '0.9rem' }}>Assigned Method:</strong>
+                    <span className={`badge ${selectedReq.verification_method?.toLowerCase() === 'test' ? 'verified' : 'analyzed'}`}>
+                      {selectedReq.verification_method || 'Analysis'}
+                    </span>
+                  </div>
+                  {selectedReq.rationale && (
+                    <div style={{ padding: '0.75rem 1rem', backgroundColor: 'rgba(88, 166, 255, 0.04)', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '0.85rem', color: '#adbac7', lineHeight: 1.6, fontStyle: 'italic' }}>
+                      <strong style={{ fontStyle: 'normal', color: '#8b949e', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '0.25rem' }}>AI Rationale</strong>
+                      {selectedReq.rationale}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Only show Steps 2 & 3 for Test method */}
+            {selectedReq.status !== 'Pending' && selectedReq.verification_method?.toLowerCase() === 'test' && (
+              <>
+                <hr style={{ borderColor: 'var(--border)', margin: '0.25rem 0' }} />
+
+                {/* ── STEP 2: Generated Test Code ── */}
+                <div>
+                  <div className={`step-label ${selectedReq.generated_code ? 'completed' : ''}`}>
+                    <span className="step-number">2</span>
+                    Generated Pytest Script
+                  </div>
+                  <p className="step-description">
+                    The AI writes a complete, executable Python test that validates this specific requirement using pytest and mock frameworks.
+                  </p>
 
                   {!selectedReq.generated_code ? (
                     <button
                       className="premium-btn"
                       onClick={handleGenerateCode}
                       disabled={isGenerating}
-                      style={{ justifyContent: 'center', width: '100%' }}
+                      style={{ justifyContent: 'center', width: '100%', padding: '0.85rem', fontSize: '0.95rem', background: 'linear-gradient(135deg, #238636, #2ea043)' }}
                     >
-                      {isGenerating ? <RefreshCw className="spin" size={16} /> : <FileSearch size={16} />}
-                      Generate Pytest Script
+                      {isGenerating ? <RefreshCw className="spin" size={18} /> : <Play size={18} />}
+                      {isGenerating ? 'Generating Script...' : 'Generate Pytest Script'}
                     </button>
                   ) : (
-                    <>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button className="secondary-btn" style={{ flex: 1, fontSize: '0.85rem' }} onClick={handleGenerateCode} disabled={isGenerating}>
-                          {isGenerating ? 'Regenerating...' : 'Regenerate'}
+                    <div>
+                      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                        <button className="secondary-btn" style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem' }} onClick={handleGenerateCode} disabled={isGenerating}>
+                          {isGenerating ? 'Regenerating...' : '↻ Regenerate'}
                         </button>
-                        <button
-                          className="premium-btn"
-                          style={{ flex: 2, fontSize: '0.9rem', backgroundColor: 'var(--success)' }}
-                          onClick={handleExecuteTest}
-                          disabled={isExecuting}
-                        >
-                          {isExecuting ? <RefreshCw className="spin" size={16} /> : <Play size={16} />}
-                          Execute Test
+                        <button className="secondary-btn" style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem' }} onClick={() => { navigator.clipboard.writeText(selectedReq.generated_code); alert('Code copied to clipboard!') }}>
+                          📋 Copy Code
                         </button>
                       </div>
-
-                      <div style={{ marginTop: '0.5rem' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#8b949e', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Generated Code</span>
-                          <span style={{ color: 'var(--primary)' }}>Python</span>
+                      <div style={{ position: 'relative' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#6e7681' }}>Python · pytest</span>
+                          <span style={{ fontSize: '0.75rem', color: '#6e7681' }}>{selectedReq.generated_code.split('\n').length} lines</span>
                         </div>
-                        <pre style={{ maxHeight: '200px', overflowY: 'auto', fontSize: '12px' }}>
+                        <pre style={{ maxHeight: '400px', overflowY: 'auto', fontSize: '13px', lineHeight: 1.55 }}>
                           {selectedReq.generated_code}
                         </pre>
                       </div>
-                    </>
+                    </div>
+                  )}
+                </div>
+
+                <hr style={{ borderColor: 'var(--border)', margin: '0.25rem 0' }} />
+
+                {/* ── STEP 3: Execution Results ── */}
+                <div>
+                  <div className={`step-label ${selectedReq.verification_status === 'Pass' ? 'completed' : ''}`}>
+                    <span className="step-number">3</span>
+                    Test Execution Results
+                  </div>
+                  <p className="step-description">
+                    The generated script is executed in a sandboxed Python environment on the server. A passing result means this requirement is independently verified.
+                  </p>
+
+                  {selectedReq.generated_code && (
+                    <button
+                      className="premium-btn"
+                      style={{ justifyContent: 'center', width: '100%', padding: '0.85rem', fontSize: '0.95rem', backgroundColor: 'var(--success)', marginBottom: '0.75rem' }}
+                      onClick={handleExecuteTest}
+                      disabled={isExecuting}
+                    >
+                      {isExecuting ? <RefreshCw className="spin" size={18} /> : <Play size={18} />}
+                      {isExecuting ? 'Executing Test...' : 'Execute Test'}
+                    </button>
                   )}
 
-                  {/* Execution Log */}
                   {selectedReq.execution_log && (
-                    <div style={{ marginTop: '1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                        <span style={{ fontSize: '0.85rem', color: '#8b949e' }}>Execution Results</span>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#6e7681' }}>Terminal Output</span>
                         {getStatusBadge(selectedReq.verification_status)}
                       </div>
                       <pre style={{
-                        maxHeight: '150px',
+                        maxHeight: '200px',
                         overflowY: 'auto',
-                        fontSize: '12px',
+                        fontSize: '13px',
                         borderColor: selectedReq.verification_status === 'Pass' ? 'rgba(35, 134, 54, 0.4)' : 'rgba(218, 54, 51, 0.4)'
                       }}>
                         {selectedReq.execution_log}
                       </pre>
                     </div>
                   )}
+
+                  {selectedReq.verification_status === 'Pass' && (
+                    <div className="verified-banner" style={{ marginTop: '0.75rem' }}>
+                      <span style={{ fontSize: '1.4rem' }}>✅</span>
+                      <div>
+                        <div style={{ fontWeight: 700 }}>REQUIREMENT VERIFIED</div>
+                        <div style={{ fontSize: '0.8rem', color: '#8b949e', fontWeight: 400 }}>This requirement has been independently verified through automated testing.</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedReq.verification_status === 'Fail' && (
+                    <div style={{ marginTop: '0.75rem', padding: '1rem 1.25rem', background: 'rgba(218, 54, 51, 0.1)', border: '1px solid rgba(218, 54, 51, 0.3)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <span style={{ fontSize: '1.4rem' }}>❌</span>
+                      <div>
+                        <div style={{ fontWeight: 700, color: '#ff7b72' }}>TEST FAILED</div>
+                        <div style={{ fontSize: '0.8rem', color: '#8b949e' }}>The generated test did not pass. Review the terminal output above and click "Regenerate" to try a different approach.</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div style={{ padding: '1rem', backgroundColor: 'rgba(210, 153, 34, 0.1)', border: '1px solid rgba(210, 153, 34, 0.2)', borderRadius: '6px', fontSize: '0.9rem', color: '#c9d1d9' }}>
-                  Agent determined this requirement is closed via <strong>{selectedReq.verification_method || 'Analysis'}</strong>. No executable test sequence required.
-                </div>
-              )}
-            </div>
+              </>
+            )}
+
+            {/* Non-Test Methods: Show closure explanation */}
+            {selectedReq.status !== 'Pending' && selectedReq.verification_method?.toLowerCase() !== 'test' && (
+              <div style={{ padding: '1rem', backgroundColor: 'rgba(210, 153, 34, 0.08)', border: '1px solid rgba(210, 153, 34, 0.2)', borderRadius: '8px', fontSize: '0.9rem', color: '#c9d1d9', lineHeight: 1.6 }}>
+                <strong style={{ color: '#d29922' }}>No executable test required.</strong><br />
+                This requirement is verified via <strong>{selectedReq.verification_method}</strong> — a manual or document-based process that does not require automated testing. The AI has provided its rationale above explaining why this method was selected.
+              </div>
+            )}
 
           </div>
         )}
