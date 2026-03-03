@@ -605,7 +605,7 @@ export default function Home() {
               {isBrainstormingAll ? <RefreshCw className="spin" size={16} /> : <Sparkles size={16} />}
               {isBrainstormingAll
                 ? `Brainstorming (${brainstormProgress.current}/${brainstormProgress.total})...`
-                : 'Brainstorm All Pending'}
+                : 'Analyze Next 10 Pending'}
             </button>
             <button
               className="premium-btn"
@@ -616,11 +616,19 @@ export default function Home() {
               {isGeneratingAll ? <RefreshCw className="spin" size={16} /> : <Play size={16} />}
               {isGeneratingAll
                 ? `Generating (${generateAllProgress.current}/${generateAllProgress.total})...`
-                : 'Generate All Scripts'}
+                : 'Generate Next 10 Scripts'}
             </button>
             <button className="secondary-btn" onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Download size={16} /> Export CSV
             </button>
+          </div>
+
+          {/* Rate Limit Information Banner */}
+          <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', backgroundColor: 'rgba(88, 166, 255, 0.08)', border: '1px solid rgba(88, 166, 255, 0.2)', borderRadius: '6px', fontSize: '0.85rem', color: '#c9d1d9', display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+            <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>💡</span>
+            <div>
+              <strong style={{ color: 'var(--primary)' }}>Free-Tier Rate Limiting Active:</strong> To prevent Google Gemini's strict 15 Requests-Per-Minute quota from crashing your app, the batch queue automatically limits processing to the <strong>first 10 eligible requirements (top-down)</strong> per click. Wait 60 seconds between clicks to clear the queue safely.
+            </div>
           </div>
         </div>
 
