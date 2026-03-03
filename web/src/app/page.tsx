@@ -2,6 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { FileSearch, Play, RefreshCw, AlertTriangle, Download, Upload, Server, Sparkles, Activity, Trash2 } from 'lucide-react'
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
+import python from 'react-syntax-highlighter/dist/cjs/languages/prism/python';
+import vscDarkPlus from 'react-syntax-highlighter/dist/cjs/styles/prism/vsc-dark-plus';
+
+SyntaxHighlighter.registerLanguage('python', python);
 
 // Types based on FastAPI Schema
 type Requirement = {
@@ -366,7 +371,10 @@ export default function Home() {
       const res = await fetch(`${API_BASE}/execute/${selectedReq.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: selectedReq.generated_code })
+        body: JSON.stringify({
+          code: selectedReq.generated_code,
+          api_key: apiKey || undefined
+        })
       })
 
       const data = await res.json()
@@ -821,9 +829,13 @@ export default function Home() {
                           <span style={{ fontSize: '0.75rem', color: '#6e7681' }}>Python · pytest</span>
                           <span style={{ fontSize: '0.75rem', color: '#6e7681' }}>{selectedReq.generated_code.split('\n').length} lines</span>
                         </div>
-                        <pre style={{ maxHeight: '400px', overflowY: 'auto', fontSize: '13px', lineHeight: 1.55 }}>
+                        <SyntaxHighlighter
+                          language="python"
+                          style={vscDarkPlus}
+                          customStyle={{ maxHeight: '400px', fontSize: '13px', lineHeight: 1.55, margin: 0, borderRadius: '6px', border: '1px solid var(--border)' }}
+                        >
                           {selectedReq.generated_code}
-                        </pre>
+                        </SyntaxHighlighter>
                       </div>
                     </div>
                   )}
@@ -842,15 +854,17 @@ export default function Home() {
                   </p>
 
                   {selectedReq.generated_code && (
-                    <button
-                      className="premium-btn"
-                      style={{ justifyContent: 'center', width: '100%', padding: '0.85rem', fontSize: '0.95rem', backgroundColor: 'var(--success)', marginBottom: '0.75rem' }}
-                      onClick={handleExecuteTest}
-                      disabled={isExecuting}
-                    >
-                      {isExecuting ? <RefreshCw className="spin" size={18} /> : <Play size={18} />}
-                      {isExecuting ? 'Executing Test...' : 'Execute Test'}
-                    </button>
+                    <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '0.75rem' }}>
+                      <button
+                        className="premium-btn"
+                        style={{ padding: '0.75rem 2rem', fontSize: '0.95rem', backgroundColor: 'var(--success)' }}
+                        onClick={handleExecuteTest}
+                        disabled={isExecuting}
+                      >
+                        {isExecuting ? <RefreshCw className="spin" size={18} /> : <Play size={18} />}
+                        {isExecuting ? 'Executing Test...' : 'Execute Test'}
+                      </button>
+                    </div>
                   )}
 
                   {selectedReq.execution_log && (
@@ -865,7 +879,7 @@ export default function Home() {
                         fontSize: '13px',
                         borderColor: selectedReq.verification_status === 'Pass' ? 'rgba(35, 134, 54, 0.4)' : 'rgba(218, 54, 51, 0.4)'
                       }}>
-                        {selectedReq.execution_log}
+                        {selectedReq.execution_log.split('--- AI FAILURE ANALYSIS ---')[0].trim()}
                       </pre>
                     </div>
                   )}
@@ -881,11 +895,15 @@ export default function Home() {
                   )}
 
                   {selectedReq.verification_status === 'Fail' && (
-                    <div style={{ marginTop: '0.75rem', padding: '1rem 1.25rem', background: 'rgba(218, 54, 51, 0.1)', border: '1px solid rgba(218, 54, 51, 0.3)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <span style={{ fontSize: '1.4rem' }}>❌</span>
+                    <div style={{ marginTop: '0.75rem', padding: '1rem 1.25rem', background: 'rgba(218, 54, 51, 0.1)', border: '1px solid rgba(218, 54, 51, 0.3)', borderRadius: '8px', display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                      <span style={{ fontSize: '1.4rem', marginTop: '0.1rem' }}>❌</span>
                       <div>
-                        <div style={{ fontWeight: 700, color: '#ff7b72' }}>TEST FAILED</div>
-                        <div style={{ fontSize: '0.8rem', color: '#8b949e' }}>The generated test did not pass. Review the terminal output above and click "Regenerate" to try a different approach.</div>
+                        <div style={{ fontWeight: 700, color: '#ff7b72', marginBottom: '0.25rem' }}>TEST FAILED</div>
+                        <div style={{ fontSize: '0.85rem', color: '#c9d1d9', lineHeight: 1.5 }}>
+                          {selectedReq.execution_log.includes('--- AI FAILURE ANALYSIS ---')
+                            ? selectedReq.execution_log.split('--- AI FAILURE ANALYSIS ---')[1].trim()
+                            : 'The generated test did not pass. Review the terminal output above and click "Regenerate" to try a different approach.'}
+                        </div>
                       </div>
                     </div>
                   )}

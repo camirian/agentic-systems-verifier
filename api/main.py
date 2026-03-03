@@ -161,9 +161,17 @@ def execute_test(req_id: str, req_params: schemas.ExecuteRequest, db: Session = 
     if not req:
         raise HTTPException(status_code=404, detail="Requirement not found")
         
-    # We don't necessarily need api_key to execute locally generated tests
-    engine = VerificationEngine("DUMMY_KEY_NOT_USED_FOR_EXEC")
+    engine = VerificationEngine(req_params.api_key or "DUMMY_KEY_NOT_USED_FOR_EXEC")
     result = engine.execute_test_code(req_params.code)
+    
+    if result['status'] == 'Fail' and req_params.api_key:
+        try:
+            prompt = f"The following pytest code for requirement '{req.text}' failed.\n\nCODE:\n{req_params.code}\n\nLOG:\n{result['log']}\n\nProvide a concise 1-3 sentence explanation of why it failed and what the different approach should be. Do not generate code, just the explanation."
+            analysis = engine.generate_text(prompt)
+            result['log'] += f"\n\n--- AI FAILURE ANALYSIS ---\n{analysis}"
+        except Exception as e:
+            print(f"Failed to generate analysis: {e}")
+            pass
     
     req.verification_status = result['status']
     req.execution_log = result['log']

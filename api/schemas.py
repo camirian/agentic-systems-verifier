@@ -58,6 +58,7 @@ class SystemLogResponse(BaseModel):
         
 class ExecuteRequest(BaseModel):
     code: str
+    api_key: Optional[str] = None
 
 class IngestRequest(BaseModel):
     target_section: Optional[str] = None
