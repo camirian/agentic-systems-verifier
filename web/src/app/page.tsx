@@ -38,9 +38,11 @@ export default function Home() {
   const [isExecuting, setIsExecuting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [isBrainstormingAll, setIsBrainstormingAll] = useState(false)
+  const [isGeneratingAll, setIsGeneratingAll] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [brainstormProgress, setBrainstormProgress] = useState({ current: 0, total: 0 })
+  const [generateAllProgress, setGenerateAllProgress] = useState({ current: 0, total: 0 })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [apiKey, setApiKey] = useState('')
@@ -198,6 +200,65 @@ export default function Home() {
     } finally {
       setIsBrainstormingAll(false)
       setBrainstormProgress({ current: 0, total: 0 })
+    }
+  }
+
+  const handleGenerateAll = async () => {
+    // Find all analyzed requirements that don't have generated code yet
+    let eligibleReqs = requirements.filter(r => r.status === 'Analyzed' && (!r.generated_code || r.generated_code.trim() === ''))
+    if (eligibleReqs.length === 0) {
+      // Also allow re-generating for all analyzed reqs that already have code
+      eligibleReqs = requirements.filter(r => r.status === 'Analyzed')
+    }
+    if (eligibleReqs.length === 0) {
+      alert("No analyzed requirements found. Run 'Brainstorm All Pending' first to analyze requirements.")
+      return
+    }
+
+    const BATCH_LIMIT = 10;
+    const isLimited = eligibleReqs.length > BATCH_LIMIT;
+    if (isLimited) {
+      eligibleReqs = eligibleReqs.slice(0, BATCH_LIMIT);
+    }
+
+    setIsGeneratingAll(true)
+    setGenerateAllProgress({ current: 0, total: eligibleReqs.length })
+    const key = apiKey || localStorage.getItem('google_api_key') || 'DEMO_KEY'
+
+    try {
+      for (let i = 0; i < eligibleReqs.length; i++) {
+        const req = eligibleReqs[i];
+        setGenerateAllProgress(prev => ({ ...prev, current: i + 1 }))
+        const formData = new FormData()
+        formData.append('api_key', key)
+        await fetch(`${API_BASE}/generate/${req.id}`, {
+          method: 'POST',
+          body: formData
+        })
+      }
+
+      // Refresh requirements data
+      const url = selectedProject && selectedProject !== 'All Projects'
+        ? `${API_BASE}/requirements?source_file=${selectedProject}`
+        : `${API_BASE}/requirements`
+      const reqRes = await fetch(url)
+      const data = await reqRes.json()
+      setRequirements(data)
+
+      if (selectedReq) {
+        const updated = data.find((r: Requirement) => r.id === selectedReq.id)
+        if (updated) setSelectedReq(updated)
+      }
+
+      if (isLimited) {
+        alert(`Successfully generated pytest scripts for ${BATCH_LIMIT} requirements!\n\nClick the button again in a minute to generate the next batch.`)
+      }
+    } catch (err) {
+      console.error("Batch generate failed:", err)
+      alert("Batch code generation failed mid-process. Ensure your API key is correct and not rate-limited.")
+    } finally {
+      setIsGeneratingAll(false)
+      setGenerateAllProgress({ current: 0, total: 0 })
     }
   }
 
@@ -545,6 +606,17 @@ export default function Home() {
               {isBrainstormingAll
                 ? `Brainstorming (${brainstormProgress.current}/${brainstormProgress.total})...`
                 : 'Brainstorm All Pending'}
+            </button>
+            <button
+              className="premium-btn"
+              onClick={handleGenerateAll}
+              disabled={isGeneratingAll || requirements.filter(r => r.status === 'Analyzed').length === 0}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'linear-gradient(135deg, #238636, #2ea043)' }}
+            >
+              {isGeneratingAll ? <RefreshCw className="spin" size={16} /> : <Play size={16} />}
+              {isGeneratingAll
+                ? `Generating (${generateAllProgress.current}/${generateAllProgress.total})...`
+                : 'Generate All Scripts'}
             </button>
             <button className="secondary-btn" onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Download size={16} /> Export CSV
