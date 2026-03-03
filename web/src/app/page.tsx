@@ -144,20 +144,26 @@ export default function Home() {
   }
 
   const handleBrainstormAll = async () => {
-    const pendingReqs = requirements.filter(r => r.status === 'Pending')
+    let pendingReqs = requirements.filter(r => r.status === 'Pending')
     if (pendingReqs.length === 0) {
       alert("No pending requirements to brainstorm in this view.")
       return
     }
 
-    if (!window.confirm(`Are you sure you want the AI to automatically brainstorm verification strategies for ${pendingReqs.length} pending requirements?\n\nThis may take several moments based on API latency.`)) return;
+    // Since Gemini free tier enforces 15 Requests Per Minute, processing all 400 at once will crash the API.
+    // We will batch process a maximum of 10 items at a time to ensure a flawless demo experience.
+    const BATCH_LIMIT = 10;
+    const isLimited = pendingReqs.length > BATCH_LIMIT;
+    if (isLimited) {
+      pendingReqs = pendingReqs.slice(0, BATCH_LIMIT);
+    }
 
     setIsBrainstormingAll(true)
     setBrainstormProgress({ current: 0, total: pendingReqs.length })
     const key = apiKey || localStorage.getItem('google_api_key') || 'DEMO_KEY'
 
     try {
-      // Execute sequentially to avoid API rate limits
+      // Execute sequentially to preserve API quota
       for (let i = 0; i < pendingReqs.length; i++) {
         const req = pendingReqs[i];
         setBrainstormProgress(prev => ({ ...prev, current: i + 1 }))
@@ -169,7 +175,7 @@ export default function Home() {
         })
       }
 
-      // Refresh data
+      // Refresh data completely
       const url = selectedProject && selectedProject !== 'All Projects'
         ? `${API_BASE}/requirements?source_file=${selectedProject}`
         : `${API_BASE}/requirements`
@@ -181,6 +187,11 @@ export default function Home() {
         const updated = data.find((r: Requirement) => r.id === selectedReq.id)
         if (updated) setSelectedReq(updated)
       }
+
+      if (isLimited) {
+        alert(`Successfully auto-analyzed ${BATCH_LIMIT} requirements!\n\nTo protect your free-tier Google API rate limits, batch generation pauses after 10 requests. You can click the button again in a minute to do the next batch!`)
+      }
+
     } catch (err) {
       console.error("Batch analyze failed:", err)
       alert("Batch brainstorm failed mid-process. Ensure your API key is correct and not rate-limited.")
