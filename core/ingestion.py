@@ -98,7 +98,7 @@ def extract_requirements_from_pdf(
     
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-flash-latest',
+        model = genai.GenerativeModel('gemini-2.5-flash',
                                       generation_config={"response_mime_type": "application/json"})
         
         reader = pypdf.PdfReader(file_path)
@@ -180,7 +180,7 @@ def extract_requirements_from_pdf(
             
         # Batching Configuration
         BATCH_SIZE = 10 
-        MAX_WORKERS = 5 
+        MAX_WORKERS = 2 
         
         # Prepare Batches from filtered pages
         batches = []

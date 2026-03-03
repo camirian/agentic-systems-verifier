@@ -394,24 +394,40 @@ export default function Home() {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-                <input
-                  type="file"
-                  accept=".pdf"
-                  ref={fileInputRef}
-                  style={{ display: 'none' }}
-                  onChange={handleFileUpload}
-                />
-                <button
-                  className="premium-btn"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
-                  style={{ padding: '1rem 2rem', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', boxShadow: '0 0 20px rgba(88, 166, 255, 0.2)' }}
-                >
-                  {isUploading ? <RefreshCw className="spin" size={20} /> : <Upload size={20} />}
-                  {isUploading ? 'Ingesting Document...' : 'Upload First PDF'}
-                </button>
-                <div style={{ fontSize: '0.85rem', color: '#8b949e', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  Don't forget to set your <FileSearch size={14} /> Google API Key in the top right after uploading.
+                <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '300px', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: '#8b949e', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <FileSearch size={14} /> Google Gemini API Key
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Paste your API key here..."
+                    className="secondary-btn"
+                    style={{ width: '100%', padding: '0.75rem', marginBottom: '0.5rem' }}
+                    value={apiKey}
+                    onChange={handleKeyChange}
+                  />
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    ref={fileInputRef}
+                    style={{ display: 'none' }}
+                    onChange={handleFileUpload}
+                  />
+                  <button
+                    className="premium-btn"
+                    onClick={() => {
+                      if (!apiKey && !(localStorage.getItem('google_api_key'))) {
+                        alert("Please enter a Google API Key first.");
+                        return;
+                      }
+                      fileInputRef.current?.click();
+                    }}
+                    disabled={isUploading}
+                    style={{ padding: '1rem', fontSize: '1.05rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', boxShadow: '0 0 20px rgba(88, 166, 255, 0.2)' }}
+                  >
+                    {isUploading ? <RefreshCw className="spin" size={20} /> : <Upload size={20} />}
+                    {isUploading ? 'Ingesting Document...' : 'Upload First PDF'}
+                  </button>
                 </div>
               </div>
             </div>

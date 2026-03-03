@@ -14,7 +14,7 @@ class VerificationEngine:
         """
         self.api_key = api_key
         genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel('gemini-flash-latest',
+        self.model = genai.GenerativeModel('gemini-2.5-flash',
                                       generation_config={"response_mime_type": "application/json"})
 
     def _analyze_requirement(self, req: Dict[str, Any]) -> str:
@@ -169,7 +169,10 @@ class VerificationEngine:
         
         try:
             # Use a simpler generation config for code (text output)
-            response = self.model.generate_content(prompt)
+            response = self.model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(response_mime_type="text/plain")
+            )
             
             # Clean up potential markdown if the model ignores instructions
             code = response.text.replace("```python", "").replace("```", "").strip()
@@ -193,8 +196,8 @@ class VerificationEngine:
         import os
         import uuid
         
-        # Create a temporary test file
-        filename = f"tests/temp_test_{uuid.uuid4().hex}.py"
+        # Create a temporary test file in the system tmp directory that exists in the Docker container
+        filename = f"/tmp/temp_test_{uuid.uuid4().hex}.py"
         
         try:
             with open(filename, "w") as f:

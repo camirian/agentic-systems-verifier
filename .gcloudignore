@@ -1,0 +1,11 @@
+.gcloudignore
+.git
+.gitignore
+web/node_modules/
+web/.next/
+venv/
+__pycache__/
+*.pyc
+logs/
+data/*.pdf
+core/*.db

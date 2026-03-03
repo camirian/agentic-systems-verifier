@@ -371,7 +371,8 @@ def log_event(message: str, level: str = "INFO"):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
-    timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+    timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{timestamp}] {level}: {message}") # Ensure it prints to Cloud Run stdout
     cursor.execute('INSERT INTO system_logs (timestamp, level, message) VALUES (?, ?, ?)', (timestamp, level, message))
     
     conn.commit()
