@@ -61,16 +61,102 @@ I developed `rag_metrics.py`, an LLM-as-a-judge module using `gemini-2.5-flash`.
 - **Recall:** How much of the original requirement's intent is captured in the response?
 - **Precision:** How concise and directly relevant is the generated response to the requirement context?
 
+**Evidence (Code Excerpt from `evaluation/rag_metrics.py`):**
+```python
+def run_full_evaluation(self, requirement: str, generated_response: str) -> Dict[str, float]:
+    """Runs all quantitative RAG metrics and returns a cohesive scorecard."""
+    faithfulness = self.evaluate_faithfulness(requirement, generated_response)
+    recall = self.evaluate_recall(requirement, generated_response)
+    precision = self.evaluate_precision(requirement, generated_response)
+    
+    # Harmonic mean of precision and recall
+    f1_score = 0.0
+    if (precision + recall) > 0:
+        f1_score = 2 * (precision * recall) / (precision + recall)
+        
+    return {
+        "faithfulness": faithfulness,
+        "precision": precision,
+        "recall": recall,
+        "f1_score": f1_score
+    }
+```
+
 ### 2. SysML v2 Pipeline (`/sysml_v2`)
 I simulated an MBSE (Model-Based Systems Engineering) integration targeting NASA-style spacecraft hardware:
 - Created `sample_architecture.sysml`, a formal textual model defining a battery thermal control subsystem and its linked requirements.
 - Developed `sysml_parser.py` to parse the formal SysML syntax into a structured JSON Abstract Syntax Tree (AST).
 - Built `gemini_pipeline.py` to ingest the AST and generate an automated Verification Report, logically proving that the designed subsystem attributes satisfy the declared requirements.
 
+**Evidence (SysML v2 Parser AST Generation):**
+```python
+import re, json
+
+# ... (SysMLv2Parser class) ...
+def parse(self) -> dict:
+    """Reads the .sysml file and extracts fundamental blocks and formal requirements into a JSON AST."""
+    # ... regex matching for 'part def', 'requirement def', and 'satisfy' loops ...
+    
+    return ast
+
+# Generated AST payload fed to Gemini LLM for reasoning:
+# {
+#   "parts": [{"name": "ThermalControlSystem", "attributes": [{"name": "coolingCapacity", "value": "5.0"}], ...}],
+#   "requirements": [{"name": "BatteryThermalRequirement", "text": "maintain between 10C and 25C"}],
+#   "satisfy_links": [{"requirement": "BatteryThermalRequirement", "satisfying_part": "PowerAndThermalSubsystem"}]
+# }
+```
+
 ### 3. Formal C4 Architecture (`ARCHITECTURE.md`)
 I wrote a comprehensive `ARCHITECTURE.md` file featuring a formal **C4 Model** (Context, Container, and Component diagrams) mapped using native Mermaid.js syntax. This formally documents the Next.js frontend, FastAPI backend, SQLite storage layer, and Gemini LLM integrations.
 
+**Evidence (C4 Container Diagram showing Deployment Units):**
+```mermaid
+C4Container
+    title Container Diagram: Agentic Systems Verifier
+
+    Person(SysEng, "Systems Engineer", "Primary User")
+
+    Container_Boundary(CloudRun, "Google Cloud Run Environment") {
+        Container(Frontend, "Next.js Web Frontend", "React, TypeScript, Tailwind", "Provides the Matrix View and 3-step Inspector Panel for verification workflows.")
+        Container(Backend, "FastAPI Backend", "Python 3.10+", "Handles document parsing, AI orchestration, and sandboxed code execution.")
+        ContainerDb(Database, "SQLite Database", "Local File", "Stores session requirements, generated code, and execution logs.")
+    }
+
+    System_Ext(GeminiAPI, "Google Gemini API", "LLM reasoning engine")
+
+    Rel(SysEng, Frontend, "Views UI, clicks 'Execute Test'")
+    Rel(Frontend, Backend, "RESTful API Calls (JSON)")
+    Rel(Backend, Database, "Reads/Writes Requirement state via SQLAlchemy")
+    Rel(Backend, GeminiAPI, "Sends context & parameters for completion")
+```
+
 ### 4. DOORS Next Generation Mock (`/tools/doors_export_mock.py`)
 I simulated an enterprise ALM integration by writing a Python script that acts as a Rational Publishing Engine (RPE) extraction wrapper around IBM DOORS OSLC endpoints. It extracts a mock technical baseline and transforms it into the normalized JSON schema required by the Agentic Systems Verifier platform.
+
+**Evidence (DOORS RPE Extraction Wrapper):**
+```python
+def transform_to_verifier_schema(self, doors_data: List[Dict]) -> str:
+    """Transforms raw IBM DOORS exports into the Agentic OSLC Verifier JSON schema."""
+    transformed = []
+    
+    for item in doors_data:
+        # Strict workflow governance: Skip unapproved technical baseline drafts
+        if item.get("Status") != "Approved":
+            continue
+            
+        req_obj = {
+            "id": item["Identifier"],
+            "text": item["Primary Text"],
+            "verification_method": item["Verification Method"],
+            "metadata": {
+                "baseline": self.baseline_id,          # e.g., "BL-v2.1.0-RC"
+                "traceability_links": item.get("Link_Satisfies", [])
+            }
+        }
+        transformed.append(req_obj)
+        
+    return json.dumps(transformed, indent=2)
+```
 
 All updates have been committed to the `main` branch.
