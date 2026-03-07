@@ -21,6 +21,14 @@
 
 ASV transforms static PDF specifications into executable, verified code. It bridges the gap between the "Left V" (Requirements Decomposition) and the "Right V" (Verification & Validation) using a multi-agent architecture.
 
+## 🤝 Enterprise Capabilities (Sprint 1)
+
+ASV has been extended to substantiate heavy Systems Engineering and Applied AI claims:
+*   📊 **RAG Evaluation Metrics:** The `/evaluation` module implements LLM-as-a-judge scoring for Faithfulness, Precision, and Recall.
+*   📐 **MBSE Integration:** The `/sysml_v2` module parses formal architectural textual models into JSON ASTs, feeding them into a Gemini pipeline for automated design-time verification.
+*   🏗️ **Formal Architecture:** See `ARCHITECTURE.md` for our formal C4 Model (Context, Container, Component) defined using Mermaid.js.
+*   🔗 **DOORS Next Gen Baseline Extraction:** The `tools/doors_export_mock.py` script simulates programmatic IBM RPE extractions of OSLC requirements to feed the verification engine.
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to set up your development environment and submit Pull Requests.
