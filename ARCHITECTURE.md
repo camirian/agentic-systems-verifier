@@ -31,7 +31,6 @@ C4Container
     title Container Diagram: Agentic Systems Verifier
 
     Person(SysEng, "Systems Engineer", "Primary User")
-    System_Ext(GeminiAPI, "Google Gemini API", "LLM engine")
 
     Container_Boundary(CloudRun, "Google Cloud Run Environment") {
         Container(Frontend, "Next.js Web Frontend", "React, TypeScript", "Provides the Matrix View and<br>3-step Inspector Panel.")
@@ -39,10 +38,16 @@ C4Container
         ContainerDb(Database, "SQLite Database", "Local File", "Stores session requirements,<br>generated code, and logs.")
     }
 
-    Rel_D(SysEng, Frontend, "Views UI,<br>clicks 'Execute Test'")
-    Rel_D(Frontend, Backend, "RESTful API Calls<br>(JSON)")
-    Rel_R(Backend, Database, "Reads/Writes state<br>via SQLAlchemy")
+    System_Ext(GeminiAPI, "Google Gemini API", "LLM engine")
+
+    Rel(SysEng, Frontend, "Views UI,<br>clicks 'Execute Test'")
+    Rel(Frontend, Backend, "RESTful API Calls<br>(JSON)")
+    Rel(Backend, Database, "Reads/Writes state<br>via SQLAlchemy")
     Rel_R(Backend, GeminiAPI, "Sends context & parameters<br>for completion")
+    
+    UpdateRelStyle(SysEng, Frontend, $offsetX="-50", $offsetY="-20")
+    UpdateRelStyle(Frontend, Backend, $offsetX="-50", $offsetY="-20")
+    UpdateRelStyle(Backend, Database, $offsetX="-50", $offsetY="20")
 ```
 
 ## 3. Component Diagram (Backend API)
@@ -69,13 +74,20 @@ C4Component
     System_Ext(GeminiAPI, "Google Gemini API", "LLM provider")
     ContainerDb(Database, "SQLite DB", "Session storage")
 
-    Rel_R(Router, DocParser, "Triggers extraction")
-    Rel_D(Router, VerificationEngine, "Requests AI completion")
-    Rel_D(Router, ExecutionSandbox, "Executes 'Test' scripts")
+    Rel(Router, DocParser, "Triggers extraction")
+    Rel(Router, VerificationEngine, "Requests AI completion")
+    Rel(Router, ExecutionSandbox, "Executes 'Test' scripts")
     
-    Rel_R(VerificationEngine, GeminiAPI, "Sends prompt payload")
-    Rel_D(VerificationEngine, MetricsModule, "Logs telemetry/scores")
-    Rel_D(VerificationEngine, Database, "Updates DB values")
+    Rel(VerificationEngine, GeminiAPI, "Sends prompt payload")
+    Rel(VerificationEngine, MetricsModule, "Logs telemetry/scores")
+    Rel(VerificationEngine, Database, "Updates DB values")
+    
+    UpdateRelStyle(Router, DocParser, $offsetX="-40", $offsetY="-20")
+    UpdateRelStyle(Router, VerificationEngine, $offsetX="20", $offsetY="20")
+    UpdateRelStyle(Router, ExecutionSandbox, $offsetX="-40", $offsetY="20")
+    UpdateRelStyle(VerificationEngine, GeminiAPI, $offsetX="20", $offsetY="-20")
+    UpdateRelStyle(VerificationEngine, MetricsModule, $offsetX="-30", $offsetY="20")
+    UpdateRelStyle(VerificationEngine, Database, $offsetX="20", $offsetY="20")
 ```
 
 ## Architectural Design Decisions & Trade-offs

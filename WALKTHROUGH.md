@@ -116,7 +116,6 @@ C4Container
     title Container Diagram: Agentic Systems Verifier
 
     Person(SysEng, "Systems Engineer", "Primary User")
-    System_Ext(GeminiAPI, "Google Gemini API", "LLM engine")
 
     Container_Boundary(CloudRun, "Google Cloud Run Environment") {
         Container(Frontend, "Next.js Web Frontend", "React, TypeScript", "Provides the Matrix View and<br>3-step Inspector Panel.")
@@ -124,10 +123,16 @@ C4Container
         ContainerDb(Database, "SQLite Database", "Local File", "Stores session requirements,<br>generated code, and logs.")
     }
 
-    Rel_D(SysEng, Frontend, "Views UI,<br>clicks 'Execute Test'")
-    Rel_D(Frontend, Backend, "RESTful API Calls<br>(JSON)")
-    Rel_R(Backend, Database, "Reads/Writes state<br>via SQLAlchemy")
+    System_Ext(GeminiAPI, "Google Gemini API", "LLM engine")
+
+    Rel(SysEng, Frontend, "Views UI,<br>clicks 'Execute Test'")
+    Rel(Frontend, Backend, "RESTful API Calls<br>(JSON)")
+    Rel(Backend, Database, "Reads/Writes state<br>via SQLAlchemy")
     Rel_R(Backend, GeminiAPI, "Sends context & parameters<br>for completion")
+    
+    UpdateRelStyle(SysEng, Frontend, $offsetX="-50", $offsetY="-20")
+    UpdateRelStyle(Frontend, Backend, $offsetX="-50", $offsetY="-20")
+    UpdateRelStyle(Backend, Database, $offsetX="-50", $offsetY="20")
 ```
 
 ### 4. DOORS Next Generation Mock (`/tools/doors_export_mock.py`)
