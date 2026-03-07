@@ -116,19 +116,18 @@ C4Container
     title Container Diagram: Agentic Systems Verifier
 
     Person(SysEng, "Systems Engineer", "Primary User")
+    System_Ext(GeminiAPI, "Google Gemini API", "LLM engine")
 
     Container_Boundary(CloudRun, "Google Cloud Run Environment") {
-        Container(Frontend, "Next.js Web Frontend", "React, TypeScript, Tailwind", "Provides the Matrix View and 3-step Inspector Panel for verification workflows.")
-        Container(Backend, "FastAPI Backend", "Python 3.10+", "Handles document parsing, AI orchestration, and sandboxed code execution.")
-        ContainerDb(Database, "SQLite Database", "Local File", "Stores session requirements, generated code, and execution logs.")
+        Container(Frontend, "Next.js Web Frontend", "React, TypeScript", "Provides the Matrix View and<br>3-step Inspector Panel.")
+        Container(Backend, "FastAPI Backend", "Python 3.10+", "Handles document parsing,<br>AI orchestration, and execution.")
+        ContainerDb(Database, "SQLite Database", "Local File", "Stores session requirements,<br>generated code, and logs.")
     }
 
-    System_Ext(GeminiAPI, "Google Gemini API", "LLM reasoning engine")
-
-    Rel(SysEng, Frontend, "Views UI, clicks 'Execute Test'")
-    Rel(Frontend, Backend, "RESTful API Calls (JSON)")
-    Rel(Backend, Database, "Reads/Writes Requirement state via SQLAlchemy")
-    Rel(Backend, GeminiAPI, "Sends context & parameters for completion")
+    Rel_D(SysEng, Frontend, "Views UI,<br>clicks 'Execute Test'")
+    Rel_D(Frontend, Backend, "RESTful API Calls<br>(JSON)")
+    Rel_R(Backend, Database, "Reads/Writes state<br>via SQLAlchemy")
+    Rel_R(Backend, GeminiAPI, "Sends context & parameters<br>for completion")
 ```
 
 ### 4. DOORS Next Generation Mock (`/tools/doors_export_mock.py`)

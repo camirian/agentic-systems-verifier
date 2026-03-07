@@ -11,16 +11,16 @@ This formalization substantiates Applied AI Architect and Systems Engineering so
 C4Context
     title System Context: Agentic Systems Verifier
 
-    Person(SysEng, "Systems Engineer", "Uploads requirements, reviews AI-generated verification strategies and test code.")
+    Person(SysEng, "Systems Engineer", "Uploads requirements,<br>reviews AI-generated<br>verification & code.")
     
-    System(AgenticVerifier, "Agentic Systems Verifier", "Automates requirements analysis, Python test generation, and secure sandboxed execution.")
+    System(AgenticVerifier, "Agentic Systems Verifier", "Automates requirements analysis,<br>Python test generation, and<br>secure execution.")
     
-    System_Ext(GeminiAPI, "Google Gemini API", "Provides LLM reasoning for MBSE parsing, RAG evaluation, and Pytest code generation.")
-    System_Ext(DOORS, "IBM DOORS Next Generation", "External ALM tool holding the technical baseline. Target for automated RPE exports.")
+    System_Ext(GeminiAPI, "Google Gemini API", "Provides LLM reasoning for<br>MBSE parsing and Pytest generation.")
+    System_Ext(DOORS, "DOORS Next Generation", "External ALM tool holding the technical baseline.")
 
-    Rel(SysEng, AgenticVerifier, "Uploads PDFs/CSVs, executes verification batches")
-    Rel(AgenticVerifier, GeminiAPI, "Prompts for Verification Method (Test, Analysis, Inspection) and Pytest Code generation")
-    Rel(AgenticVerifier, DOORS, "Simulates RPE API data extraction")
+    Rel_D(SysEng, AgenticVerifier, "Uploads PDFs/CSVs,<br>executes verification batches")
+    Rel_R(AgenticVerifier, GeminiAPI, "Prompts for Verification Method<br>and Pytest Code")
+    Rel_D(AgenticVerifier, DOORS, "Simulates RPE API data extraction")
 ```
 
 ## 2. Container Diagram
@@ -31,19 +31,18 @@ C4Container
     title Container Diagram: Agentic Systems Verifier
 
     Person(SysEng, "Systems Engineer", "Primary User")
+    System_Ext(GeminiAPI, "Google Gemini API", "LLM engine")
 
     Container_Boundary(CloudRun, "Google Cloud Run Environment") {
-        Container(Frontend, "Next.js Web Frontend", "React, TypeScript, Tailwind", "Provides the Matrix View and 3-step Inspector Panel for verification workflows.")
-        Container(Backend, "FastAPI Backend", "Python 3.10+", "Handles document parsing, AI orchestration, and sandboxed code execution.")
-        ContainerDb(Database, "SQLite Database", "Local File", "Stores session requirements, generated code, and execution logs.")
+        Container(Frontend, "Next.js Web Frontend", "React, TypeScript", "Provides the Matrix View and<br>3-step Inspector Panel.")
+        Container(Backend, "FastAPI Backend", "Python 3.10+", "Handles document parsing,<br>AI orchestration, and execution.")
+        ContainerDb(Database, "SQLite Database", "Local File", "Stores session requirements,<br>generated code, and logs.")
     }
 
-    System_Ext(GeminiAPI, "Google Gemini API", "LLM reasoning engine")
-
-    Rel(SysEng, Frontend, "Views UI, clicks 'Execute Test'")
-    Rel(Frontend, Backend, "RESTful API Calls (JSON)")
-    Rel(Backend, Database, "Reads/Writes Requirement state via SQLAlchemy")
-    Rel(Backend, GeminiAPI, "Sends context & parameters for completion")
+    Rel_D(SysEng, Frontend, "Views UI,<br>clicks 'Execute Test'")
+    Rel_D(Frontend, Backend, "RESTful API Calls<br>(JSON)")
+    Rel_R(Backend, Database, "Reads/Writes state<br>via SQLAlchemy")
+    Rel_R(Backend, GeminiAPI, "Sends context & parameters<br>for completion")
 ```
 
 ## 3. Component Diagram (Backend API)
@@ -54,29 +53,29 @@ C4Component
     title Component Diagram: FastAPI Backend
 
     Container_Boundary(Backend, "FastAPI Application") {
-        Component(Router, "API Router", "FastAPI Endpoints", "Routes Next.js requests to appropriate controllers (/analyze, /execute, /upload)")
+        Component(Router, "API Router", "FastAPI Endpoints", "Routes requests to controllers")
         
-        Component(DocParser, "Document Parsing Engine", "PyMuPDF, CSV Reader", "Extracts textual requirements and constraints from unstructured PDFs.")
+        Component(DocParser, "Document Parsing Engine", "PyMuPDF, CSV Reader", "Extracts requirements<br>from basic PDFs.")
         
-        Component(VerificationEngine, "Verification Engine", "Python class", "Orchestrates prompts, interacts with Gemini to assign methods and generate Pytests.")
+        Component(VerificationEngine, "Verification Engine", "Python class", "Interacts with Gemini to assign<br>methods and generate Pytests.")
         
-        Component(ExecutionSandbox, "Subprocess Execution Sandbox", "Python subprocess", "Saves generated code to /tmp/ and runs it in isolation to prevent host contamination.")
+        Component(ExecutionSandbox, "Subprocess Execution Sandbox", "Python subprocess", "Runs code in isolation<br>to prevent contamination.")
         
-        Component(MetricsModule, "RAG Evaluation Module", "/evaluation", "Scores generation quality based on Precision, Recall, and Faithfulness.")
+        Component(MetricsModule, "RAG Evaluation Module", "/evaluation", "Scores generation quality based<br>on Precision, Recall, Faithfulness.")
         
-        Component(SysMLPipeline, "SysML v2 Parser", "/sysml_v2", "Parses formal MBSE models via AST into JSON for LLM injection.")
+        Component(SysMLPipeline, "SysML v2 Parser", "/sysml_v2", "Parses formal MBSE models via<br>AST into JSON for LLM.")
     }
 
     System_Ext(GeminiAPI, "Google Gemini API", "LLM provider")
     ContainerDb(Database, "SQLite DB", "Session storage")
 
-    Rel(Router, DocParser, "Triggers standard extraction")
-    Rel(Router, VerificationEngine, "Requests AI completion")
-    Rel(Router, ExecutionSandbox, "Executes verification method == 'Test' scripts")
+    Rel_R(Router, DocParser, "Triggers extraction")
+    Rel_D(Router, VerificationEngine, "Requests AI completion")
+    Rel_D(Router, ExecutionSandbox, "Executes 'Test' scripts")
     
-    Rel(VerificationEngine, GeminiAPI, "Sends prompt payload")
-    Rel(VerificationEngine, MetricsModule, "Logs telemetry/quality scores")
-    Rel(VerificationEngine, Database, "Updates DB with generated AST/Code")
+    Rel_R(VerificationEngine, GeminiAPI, "Sends prompt payload")
+    Rel_D(VerificationEngine, MetricsModule, "Logs telemetry/scores")
+    Rel_D(VerificationEngine, Database, "Updates DB values")
 ```
 
 ## Architectural Design Decisions & Trade-offs
