@@ -33,6 +33,7 @@ flowchart TD
     classDef container fill:#438dd5,color:#fff,stroke:#3c7fc0,stroke-width:2px
     classDef ext_system fill:#999999,color:#fff,stroke:#6b6b6b,stroke-width:2px
     classDef db fill:#438dd5,color:#fff,stroke:#3c7fc0,stroke-width:2px
+    classDef edgeLabel fill:none,stroke:none
 
     SysEng(["Systems Engineer<br>[Person]"]):::person
     GeminiAPI["Google Gemini API<br>[External System]"]:::ext_system
@@ -43,10 +44,12 @@ flowchart TD
         Database[("SQLite Database<br>[Local File]<br><br>Stores session requirements<br>and execution logs")]:::db
     end
 
-    SysEng --->|"Views UI,<br>clicks 'Execute Test'"| Frontend
+    SysEng --- Rel1["Views UI,<br>clicks 'Execute Test'"]:::edgeLabel
+    Rel1 --> Frontend
     Frontend -->|"RESTful API Calls (JSON)"| Backend
     Backend -->|"Reads/Writes state<br>via SQLAlchemy"| Database
-    Backend -->|"Sends context & parameters<br>for completion"| GeminiAPI
+    Backend --- Rel2["Sends context & parameters<br>for completion"]:::edgeLabel
+    Rel2 --> GeminiAPI
     
     style CloudRun fill:none,stroke:#666,stroke-width:2px,stroke-dasharray: 5 5
 ```
@@ -59,6 +62,7 @@ flowchart TD
     classDef component fill:#85bbf0,color:#000,stroke:#5b82a7,stroke-width:2px
     classDef ext_system fill:#999999,color:#fff,stroke:#6b6b6b,stroke-width:2px
     classDef db fill:#438dd5,color:#fff,stroke:#3c7fc0,stroke-width:2px
+    classDef edgeLabel fill:none,stroke:none
 
     GeminiAPI["Google Gemini API<br>[External System]"]:::ext_system
     Database[("SQLite DB<br>[Local File]")]:::db
@@ -76,9 +80,11 @@ flowchart TD
     Router -->|"Requests AI completion"| VerificationEngine
     Router -->|"Executes 'Test' scripts"| ExecutionSandbox
     
-    VerificationEngine -->|"Sends prompt payload"| GeminiAPI
+    VerificationEngine --- Rel1["Sends prompt payload"]:::edgeLabel
+    Rel1 --> GeminiAPI
     VerificationEngine -->|"Logs telemetry/scores"| MetricsModule
-    VerificationEngine -->|"Updates DB values"| Database
+    VerificationEngine --- Rel2["Updates DB values"]:::edgeLabel
+    Rel2 --> Database
     
     style BackendApp fill:none,stroke:#666,stroke-width:2px,stroke-dasharray: 5 5
 ```
