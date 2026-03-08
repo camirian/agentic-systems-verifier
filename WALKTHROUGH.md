@@ -112,27 +112,27 @@ I wrote a comprehensive `ARCHITECTURE.md` file featuring a formal **C4 Model** (
 
 **Evidence (C4 Container Diagram showing Deployment Units):**
 ```mermaid
-C4Container
-    title Container Diagram: Agentic Systems Verifier
+flowchart TD
+    classDef person fill:#08427b,color:#fff,stroke:#052e56,stroke-width:2px
+    classDef container fill:#438dd5,color:#fff,stroke:#3c7fc0,stroke-width:2px
+    classDef ext_system fill:#999999,color:#fff,stroke:#6b6b6b,stroke-width:2px
+    classDef db fill:#438dd5,color:#fff,stroke:#3c7fc0,stroke-width:2px
 
-    Person(SysEng, "Systems Engineer", "Primary User")
+    SysEng(["Systems Engineer<br>[Person]"]):::person
+    GeminiAPI["Google Gemini API<br>[External System]"]:::ext_system
 
-    Container_Boundary(CloudRun, "Google Cloud Run Environment") {
-        Container(Frontend, "Next.js Web Frontend", "React, TypeScript", "Provides the Matrix View and<br>3-step Inspector Panel.")
-        Container(Backend, "FastAPI Backend", "Python 3.10+", "Handles document parsing,<br>AI orchestration, and execution.")
-        ContainerDb(Database, "SQLite Database", "Local File", "Stores session requirements,<br>generated code, and logs.")
-    }
+    subgraph CloudRun ["Google Cloud Run Environment"]
+        Frontend["Next.js Web Frontend<br>[React, TypeScript]<br><br>Provides Matrix View and<br>3-step Inspector Panel"]:::container
+        Backend["FastAPI Backend<br>[Python 3.10+]<br><br>Handles parsing, AI orchestration,<br>and execution"]:::container
+        Database[("SQLite Database<br>[Local File]<br><br>Stores session requirements<br>and execution logs")]:::db
+    end
 
-    System_Ext(GeminiAPI, "Google Gemini API", "LLM engine")
-
-    Rel(SysEng, Frontend, "Views UI,<br>clicks 'Execute Test'")
-    Rel(Frontend, Backend, "RESTful API Calls<br>(JSON)")
-    Rel(Backend, Database, "Reads/Writes state<br>via SQLAlchemy")
-    Rel_R(Backend, GeminiAPI, "Sends context & parameters<br>for completion")
+    SysEng -->|"Views UI,<br>clicks 'Execute Test'"| Frontend
+    Frontend -->|"RESTful API Calls (JSON)"| Backend
+    Backend -->|"Reads/Writes state<br>via SQLAlchemy"| Database
+    Backend -->|"Sends context & parameters<br>for completion"| GeminiAPI
     
-    UpdateRelStyle(SysEng, Frontend, $offsetX="-50", $offsetY="-20")
-    UpdateRelStyle(Frontend, Backend, $offsetX="-50", $offsetY="-20")
-    UpdateRelStyle(Backend, Database, $offsetX="-50", $offsetY="20")
+    style CloudRun fill:none,stroke:#666,stroke-width:2px,stroke-dasharray: 5 5
 ```
 
 ### 4. DOORS Next Generation Mock (`/tools/doors_export_mock.py`)
