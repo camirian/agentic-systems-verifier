@@ -43,7 +43,7 @@ flowchart TD
         Database[("SQLite Database<br>[Local File]<br><br>Stores session requirements<br>and execution logs")]:::db
     end
 
-    SysEng -->|"Views UI,<br>clicks 'Execute Test'"| Frontend
+    SysEng --->|"Views UI,<br>clicks 'Execute Test'"| Frontend
     Frontend -->|"RESTful API Calls (JSON)"| Backend
     Backend -->|"Reads/Writes state<br>via SQLAlchemy"| Database
     Backend -->|"Sends context & parameters<br>for completion"| GeminiAPI
